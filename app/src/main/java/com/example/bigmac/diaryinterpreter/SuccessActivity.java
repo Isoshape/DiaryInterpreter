@@ -1,21 +1,23 @@
 package com.example.bigmac.diaryinterpreter;
 
-import android.app.Activity;
+
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.net.Uri;
+import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -36,7 +38,8 @@ import java.util.ArrayList;
 
 public class SuccessActivity extends AppCompatActivity implements View.OnClickListener {
 
-
+    public static final int CONNECTION_TIMEOUT = 10000;
+    public static final int READ_TIMEOUT = 15000;
     private RadioGroup radioGroup;
     private TextView questionfield;
     private Button nextButton;
@@ -45,7 +48,8 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
     private int i = 0;
 
 
-    ArrayList<JsonHolder> result = null;
+    private ArrayList<JsonHolder> result = null;
+    private ArrayList<Integer> answers = new ArrayList<>();
 
 
 
@@ -61,8 +65,8 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
         nextButton = (Button) findViewById(R.id.nextquiz);
         nextButton.setOnClickListener(this);
 
-        prevButton = (Button) findViewById(R.id.previousquiz);
-        prevButton.setOnClickListener(this);
+//        prevButton = (Button) findViewById(R.id.previousquiz);
+//        prevButton.setOnClickListener(this);
 
 
         new AsyncQuestions().execute();
@@ -73,19 +77,80 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
     public void onClick(View v) {
 
         if(v==nextButton){
-            if (i<result.size()) {
-                i++;
-                setLayout(result, i);
+
+            int rG1_CheckId = radioGroup.getCheckedRadioButtonId();
+            Log.d("radiobuttonn", "" + rG1_CheckId);
+            radioGroup.clearCheck();
+
+            //check if array is out of bounds and if radiobutton is selected
+            if (i<=result.size()-1) {
+                if (rG1_CheckId>-1) {
+                    i++;
+                    answers.add(rG1_CheckId);
+                    setLayout(result, i);
+                }else{
+                    Toast.makeText(SuccessActivity.this,"Vælg venligst et svar ",Toast.LENGTH_LONG).show();
+                }
             }
+            else{
+                Toast.makeText(SuccessActivity.this,"Ikke flere spørgsmål ",Toast.LENGTH_LONG).show();
+            }
+
+            if (answers.size()>0) {
+
+                    Log.d("arrayanswers", "" + answers);
+
+            }
+
+
+
+//            SharedPreferences rG1Prefs = getSharedPreferences("rG1Prefs", MODE_PRIVATE);
+//            SharedPreferences.Editor prefsEditor = rG1Prefs.edit();
+//            prefsEditor.putInt("rG1_CheckId", rG1_CheckId);
+//            prefsEditor.commit();
+//            Log.d("sharedfirst",""+ rG1Prefs.getInt("rG1_CheckId", 0));
+
         }
 
-        if (v==prevButton){
-        if (i>0) {
-            i--;
-            setLayout(result, i);
-        }
+//        if (v==prevButton){
+//        if (i>0) {
+//            i--;
+//            setLayout(result, i);
+//        }
+//           SharedPreferences rG1Prefs = this.getSharedPreferences("rG1Prefs", MODE_PRIVATE);
+//
+//            rG1Prefs.getInt("rG1_CheckId", 0);
+//            Log.d("shared", "" +  rG1Prefs.getInt("rG1_CheckId", 0));
+//        }
+
+    }
+
+    //Class: Upload answers to database via php - not yet implementet
+    private class AysncUpload extends AsyncTask<String, String, String> {
+        ProgressDialog pdLoading = new ProgressDialog(SuccessActivity.this);
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            //this method will be running on UI thread
+            pdLoading.setMessage("\tUploader spørgsmål");
+            pdLoading.setCancelable(false);
+            pdLoading.show();
         }
 
+        @Override
+        protected String doInBackground(String... params) {
+
+            String done = "Alt er klaret nu";
+            return done;
+        }
+        //result from doInBackground goes here
+        protected void onPostExecute(String done) {
+            //this method will be running on UI thread
+            pdLoading.dismiss();
+            Toast.makeText(SuccessActivity.this,""+done,Toast.LENGTH_LONG).show();
+
+        }
     }
 
 
@@ -97,12 +162,10 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-
             //this method will be running on UI thread
             pdLoading.setMessage("\tHenter spørgsmål");
             pdLoading.setCancelable(false);
             pdLoading.show();
-
         }
 
         @Override
@@ -122,8 +185,8 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
             try {
                 // Setup HttpURLConnection class to send and receive data from php and mysql
                 conn = (HttpURLConnection) url.openConnection();
-                conn.setReadTimeout(15000);
-                conn.setConnectTimeout(30000);
+                conn.setReadTimeout(READ_TIMEOUT);
+                conn.setConnectTimeout(CONNECTION_TIMEOUT);
                 conn.setRequestMethod("POST");
 
                 // setDoInput and setDoOutput method depict handling of both send and receive
@@ -178,10 +241,6 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
                         }
                     }
 
-                    // Pass data to onPostExecute method
-                    Log.d("parsing","QUestions is: "+question+" answers is: "+answers);
-
-
                 } else {
                     //return ("unsuccessful");
                 }
@@ -205,15 +264,13 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
             pdLoading.dismiss();
             result = reresult;
 
-
-
             if (result != null) {
-                setLayout(result,i);
+                Toast.makeText(SuccessActivity.this,"Antal spørgmål blev hentet: "+result.size(),Toast.LENGTH_LONG).show();
+                setLayout(result, i);
 
-            } else if (result == null) {
+            } else if (result == null || result.size()==0) {
 
-                // If username and password does not match display a error message
-
+                Toast.makeText(SuccessActivity.this,"Ingen spørgsmål at vise "+result.size(),Toast.LENGTH_LONG).show();
 
             }
         }
@@ -234,7 +291,15 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
             int a = 0;
             for (; a < questionssplit.length; a++) {
                 RadioButton newRadioButton = new RadioButton(SuccessActivity.this);
+               // newRadioButton.setTextColor(Color.parseColor("#03fe6d"));
                 newRadioButton.setText("" + questionssplit[a]);
+                newRadioButton.setId(a);
+
+//                int test = 1;
+//                if(a == test){
+//                    newRadioButton.setChecked(true);
+//                }
+
                 LinearLayout.LayoutParams layoutParams = new RadioGroup.LayoutParams(
                         RadioGroup.LayoutParams.WRAP_CONTENT,
                         RadioGroup.LayoutParams.WRAP_CONTENT);
@@ -242,18 +307,19 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
 
                 if(i==result.size()-1) {
 
-                    nextButton.setText("Afslut spørgsmål");
+                    nextButton.setText("Afslut");
                 }
                 else {
                     nextButton.setText("Næste spørgsmål");
                 }
-            }
+            }//end for
+
         }
         else{
-
             Log.d("Arrayslut",""+i);
-           // Intent intent = new Intent(SuccessActivity.this,MainActivity.class);
-           // startActivity(intent);
+//           Intent intent = new Intent(SuccessActivity.this,MainActivity.class);
+//           startActivity(intent);
+            new AysncUpload().execute();
         }
 
     }//end setLayout

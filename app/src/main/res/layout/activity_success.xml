@@ -45,32 +45,32 @@
 
         android:padding="5dp"
 
-        android:layout_alignParentRight="true"
-
-        android:layout_alignBaseline="@+id/previousquiz"/>
-
-    <Button
-
-        android:layout_height="wrap_content"
-
-        android:layout_width="160dp"
-
-        android:gravity="center"
-
-        android:id="@+id/previousquiz"
-
-        android:textColor="#000"
-
-        android:text="Forrige spørgsmål"
         android:layout_below="@+id/radioGroup"
+        android:layout_toEndOf="@+id/radioGroup" />
 
-        android:layout_alignLeft="@+id/radioGroup"
+    <!--<Button-->
 
-        android:padding="5dp"
+        <!--android:layout_height="wrap_content"-->
 
-        android:layout_marginTop="20dp"
+        <!--android:layout_width="160dp"-->
 
-        android:layout_alignStart="@+id/radioGroup" />
+        <!--android:gravity="center"-->
+
+        <!--android:id="@+id/previousquiz"-->
+
+        <!--android:textColor="#000"-->
+
+        <!--android:text="Forrige spørgsmål"-->
+        <!--android:layout_below="@+id/radioGroup"-->
+
+        <!--android:layout_alignLeft="@+id/radioGroup"-->
+
+        <!--android:padding="5dp"-->
+
+        <!--android:layout_marginTop="20dp"-->
+
+        <!--android:layout_alignStart="@+id/radioGroup" />-->
+
 
 
 </RelativeLayout>
