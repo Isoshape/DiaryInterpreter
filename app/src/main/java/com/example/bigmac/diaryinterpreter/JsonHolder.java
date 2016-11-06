@@ -1,6 +1,8 @@
 package com.example.bigmac.diaryinterpreter;
 
-public class JsonHolder {
+import java.io.Serializable;
+
+public class JsonHolder implements Serializable {
 
     private int id;
 

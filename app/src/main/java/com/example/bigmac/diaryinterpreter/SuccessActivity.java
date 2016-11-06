@@ -117,41 +117,11 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
 //            i--;
 //            setLayout(result, i);
 //        }
-//           SharedPreferences rG1Prefs = this.getSharedPreferences("rG1Prefs", MODE_PRIVATE);
-//
-//            rG1Prefs.getInt("rG1_CheckId", 0);
-//            Log.d("shared", "" +  rG1Prefs.getInt("rG1_CheckId", 0));
 //        }
 
     }
 
-    //Class: Upload answers to database via php - not yet implementet
-    private class AysncUpload extends AsyncTask<String, String, String> {
-        ProgressDialog pdLoading = new ProgressDialog(SuccessActivity.this);
 
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            //this method will be running on UI thread
-            pdLoading.setMessage("\tUploader spørgsmål");
-            pdLoading.setCancelable(false);
-            pdLoading.show();
-        }
-
-        @Override
-        protected String doInBackground(String... params) {
-
-            String done = "Alt er klaret nu";
-            return done;
-        }
-        //result from doInBackground goes here
-        protected void onPostExecute(String done) {
-            //this method will be running on UI thread
-            pdLoading.dismiss();
-            Toast.makeText(SuccessActivity.this,""+done,Toast.LENGTH_LONG).show();
-
-        }
-    }
 
 
     private class AsyncQuestions extends AsyncTask<String, String, ArrayList<JsonHolder>> {
@@ -283,7 +253,7 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
             Log.d("Hvad er i", "I er nu " + i);
             String getquestion = result.get(i).getQuestion();
             Log.d("inde i array", "" + getquestion);
-            questionfield.setText("" + getquestion);
+            questionfield.setText(""+(i+1)+" / "+result.size()+ " " + getquestion);
 
             String[] questionssplit = result.get(i).getAnswers();
             Log.d("StringArray", "" + questionssplit[0]);
@@ -317,11 +287,20 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
         }
         else{
             Log.d("Arrayslut",""+i);
-//           Intent intent = new Intent(SuccessActivity.this,MainActivity.class);
-//           startActivity(intent);
-            new AysncUpload().execute();
+           Intent intent = new Intent(SuccessActivity.this,UploadAnswers.class);
+            intent.putExtra("answersArray", answers);
+            intent.putExtra("questionArray", result);
+           startActivity(intent);
+            //new AysncUpload().execute();
         }
 
     }//end setLayout
+
+
+    @Override
+    public void onBackPressed() {
+        //disable back button
+    }
+
 
 }
