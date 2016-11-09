@@ -1,6 +1,7 @@
 package com.example.bigmac.diaryinterpreter;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -13,8 +14,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
@@ -27,6 +31,8 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
     private Button upload;
     private ArrayList<Integer> answers;
     private ArrayList<JsonHolder> questions;
+    private String finalString;
+    StringBuilder stringBuilder = new StringBuilder();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,11 +49,14 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             answers = extras.getIntegerArrayList("answersArray");
-
              questions = (ArrayList<JsonHolder>) getIntent().getSerializableExtra("questionArray");
 
                // String[] questionssplit = questions.get(1).getAnswers();
                 for (int a=0;a<questions.size();a++){
+
+                    stringBuilder.append(answers.get(a)+",");
+
+
                     final TextView rowTextView = new TextView(this);
                     final TextView answerTextview = new TextView(this);
                     // set some properties of rowTextView or something
@@ -61,15 +70,17 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
                     ll.addView(answerTextview);
 
                 }
+            finalString = stringBuilder.toString();
+            Log.d("mystring",""+finalString);
 
         }
 
     }
     @Override
     public void onClick(View v) {
-
+        String id = "5";
         if (v == upload){
-            new AysncUpload().execute();
+            new AysncUpload().execute(finalString,id);
         }
 
     }
@@ -94,7 +105,9 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
             try {
 
                 // Enter URL address where your php file resides
-                url = new URL("http://hadsundmotion.dk/login.inc.php");
+
+                url = new URL("http://hadsundmotion.dk/upload.php");
+
 
             } catch (MalformedURLException e) {
                 // TODO Auto-generated catch block
@@ -113,10 +126,14 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
                 conn.setDoInput(true);
                 conn.setDoOutput(true);
 
+                Log.d("params0", "" + params[0]);
+                Log.d("params1",""+params[1]);
+
+
                 // Append parameters to URL
                 Uri.Builder builder = new Uri.Builder()
-                        .appendQueryParameter("username", params[0])
-                        .appendQueryParameter("password", params[1]);
+                        .appendQueryParameter("answers", params[0])
+                        .appendQueryParameter("id", params[1]);
                 String query = builder.build().getEncodedQuery();
 
                 // Open connection for sending data
@@ -134,14 +151,65 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
                 e1.printStackTrace();
                 return "exception";
             }
-            String done = "Alt er klaret nu";
-            return done;
+            try {
+
+                int response_code = conn.getResponseCode();
+
+                // Check if successful connection made
+                if (response_code == HttpURLConnection.HTTP_OK) {
+                    Log.d("connectiontest1","hvad er status - OK");
+                    // Read data sent from server
+                    InputStream input = conn.getInputStream();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+                    StringBuilder result = new StringBuilder();
+                    String line;
+
+                    while ((line = reader.readLine()) != null) {
+                        result.append(line);
+                        Log.d("testline",line);
+                    }
+
+                    // Pass data to onPostExecute method
+                    return(result.toString());
+
+                }else{
+                    Log.d("connectiontest2","hvad er status - BAD");
+                    return("unsuccessful");
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                return "exception";
+            } finally {
+                conn.disconnect();
+            }
         }
         //result from doInBackground goes here
         protected void onPostExecute(String done) {
             //this method will be running on UI thread
             pdLoading.dismiss();
-            Toast.makeText(UploadAnswers.this, "" + done, Toast.LENGTH_LONG).show();
+
+
+            if(done.equalsIgnoreCase("true"))
+            {
+                /* Here launching another activity when login successful. If you persist login state
+                use sharedPreferences of Android. and logout button to clear sharedPreferences.
+                 */
+                Toast.makeText(UploadAnswers.this, "Upload gennemført - tak!", Toast.LENGTH_LONG).show();
+                Intent back = new Intent(UploadAnswers.this,MainActivity.class);
+                startActivity(back);
+
+
+            }else if (done.equalsIgnoreCase("false")){
+
+                // if SQL stmt is false
+                Toast.makeText(UploadAnswers.this, "Kunne ikke uploade!", Toast.LENGTH_LONG).show();
+
+            } else if (done.equalsIgnoreCase("exception") || done.equalsIgnoreCase("unsuccessful")) {
+
+                Toast.makeText(UploadAnswers.this, "OOPs! Something went wrong. Connection Problem.", Toast.LENGTH_LONG).show();
+
+            }
 
         }
     }

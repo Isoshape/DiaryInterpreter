@@ -11,42 +11,142 @@
     android:layout_gravity="center_vertical"
     tools:context="com.example.bigmac.diaryinterpreter.MainActivity">
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="vertical"
+        android:id="@+id/inputHolder"
 
-    <EditText
+        android:layout_weight="1"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:weightSum="10">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:textSize="30dp"
+                android:layout_weight="1"
+                android:text="Din Dagbog"
+                />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@null"
+            android:textSize="20dp"
+            android:layout_weight="1"
+            android:id="@+id/changeusernameBtn"
+
+            />
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Brugernavn"
-        android:background="#ffffff"
-        android:height="40dp"
+        android:layout_gravity="center"
+        android:layout_weight="1"
+        android:height="20dp"
         android:gravity="center"
+        android:text="Klik for at ændre brugernavn"
         android:id="@+id/username">
 
-    </EditText>
+    </TextView>
 
-    <EditText
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Adgangskode"
-        android:id="@+id/password"
-        android:background="#ffffff"
-        android:height="40dp"
-        android:gravity="center">
-    </EditText>
+        </LinearLayout>
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Logind"
-        android:id="@+id/login"
-        android:onClick="checkLogin"
-        android:layout_gravity="center_horizontal" />
+
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_weight="1"
+            android:layout_height="match_parent">
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:cursorVisible="false"
+                android:id="@+id/password"
+                android:textColor="#000"
+                android:layout_weight="1"
+                android:inputType="text"
+                android:textSize="20dp"
+
+                android:gravity="center">
+            </EditText>
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:cursorVisible="false"
+                android:id="@+id/password1"
+                android:textColor="#000"
+                android:layout_weight="1"
+                android:inputType="text"
+                android:textSize="20dp"
+
+                android:gravity="center">
+            </EditText>
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:cursorVisible="false"
+                android:id="@+id/password2"
+                android:textColor="#000"
+                android:layout_weight="1"
+                android:inputType="text"
+                android:textSize="20dp"
+
+                android:gravity="center">
+            </EditText>
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/password3"
+                android:cursorVisible="false"
+                android:textColor="#000"
+                android:layout_weight="1"
+                android:inputType="text"
+                android:textSize="20dp"
+
+                android:gravity="center">
+            </EditText>
+
+
+
+            </LinearLayout>
+
+    </LinearLayout>
 
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="Small Text"
-        android:id="@+id/test"
-        android:layout_gravity="center_horizontal" />
+        android:layout_gravity="center"
+        android:text="Indtast pinkode"
+        android:height="40dp"
+        android:gravity="center"
+        >
+
+    </TextView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:id="@+id/numberHolder"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_height="match_parent">
+
+        <!--<View-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="1dp"-->
+            <!--android:layout_weight="1"-->
+            <!--android:background="@android:color/darker_gray"/>-->
+
+    </LinearLayout>
 
 </LinearLayout>

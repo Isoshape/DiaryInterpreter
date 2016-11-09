@@ -83,7 +83,8 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
             radioGroup.clearCheck();
 
             //check if array is out of bounds and if radiobutton is selected
-            if (i<=result.size()-1) {
+            if (i<result.size()) {
+                //check if an answer is selected
                 if (rG1_CheckId>-1) {
                     i++;
                     answers.add(rG1_CheckId);
@@ -102,13 +103,6 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
 
             }
 
-
-
-//            SharedPreferences rG1Prefs = getSharedPreferences("rG1Prefs", MODE_PRIVATE);
-//            SharedPreferences.Editor prefsEditor = rG1Prefs.edit();
-//            prefsEditor.putInt("rG1_CheckId", rG1_CheckId);
-//            prefsEditor.commit();
-//            Log.d("sharedfirst",""+ rG1Prefs.getInt("rG1_CheckId", 0));
 
         }
 
@@ -253,22 +247,21 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
             Log.d("Hvad er i", "I er nu " + i);
             String getquestion = result.get(i).getQuestion();
             Log.d("inde i array", "" + getquestion);
+
+            //Get question from arraylist
             questionfield.setText(""+(i+1)+" / "+result.size()+ " " + getquestion);
 
+            //get possible answers in insert them in an string array
             String[] questionssplit = result.get(i).getAnswers();
             Log.d("StringArray", "" + questionssplit[0]);
             radioGroup.removeAllViews();
             int a = 0;
             for (; a < questionssplit.length; a++) {
+                //create radiobuttons equal to size of possible answers, string array
                 RadioButton newRadioButton = new RadioButton(SuccessActivity.this);
                // newRadioButton.setTextColor(Color.parseColor("#03fe6d"));
                 newRadioButton.setText("" + questionssplit[a]);
                 newRadioButton.setId(a);
-
-//                int test = 1;
-//                if(a == test){
-//                    newRadioButton.setChecked(true);
-//                }
 
                 LinearLayout.LayoutParams layoutParams = new RadioGroup.LayoutParams(
                         RadioGroup.LayoutParams.WRAP_CONTENT,
