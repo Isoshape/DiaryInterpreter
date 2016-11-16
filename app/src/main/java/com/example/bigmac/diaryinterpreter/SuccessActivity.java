@@ -54,6 +54,7 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
 
     private ArrayList<JsonHolder> result = null;
     private ArrayList<Integer> answers = new ArrayList<>();
+    private ArrayList<Integer> exstraAnswersArray = new ArrayList<>();
 
 
 
@@ -94,25 +95,34 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
             Log.d("radiobuttonn", "" + rG1_CheckId);
             radioGroup.clearCheck();
 
-            //check if array is out of bounds and if radiobutton is selected
+            //check if array holding jsonObjects is out of bounds
             if (i<result.size()) {
-                //check if an answer is selected, if true insert into arraylist
+                //check if an answer is selected, if true proceed
                 if (rG1_CheckId>-1) {
 
-                    answers.add(rG1_CheckId);
-
+                    //check if extra answer is missed/not activated in case of this save the value as -1 into xtraanswerArray (meaning this questions is not answered/activated)
                     if (Integer.parseInt(result.get(i).getExtraID())>-1 && rG1_CheckId != Integer.parseInt(result.get(i).getExtraID()) && flagExtra==1){
-                        answers.add(-1);
+                        exstraAnswersArray.add(-1);
                     }
 
-                    //Check for extra answers (if they are possible) flagextra is set to 0 everytime methode is called, to not enter it again
+                    //Check if extra answers is activated (if its possible) flagextra is set to 0 everytime methode is called, to not enter it again until left for main question
                     if (rG1_CheckId == Integer.parseInt(result.get(i).getExtraID()) && flagExtra==1){
 
+                        answers.add(rG1_CheckId);
                         showExtraQuestion(result, i);
+                        flagExtra = 2;
 
                     }
-
+                    //Check to see if extra answers is active, if so save selected value in extraanswersArrat
+                    else if (flagExtra==2){
+                     exstraAnswersArray.add(rG1_CheckId);
+                        flagExtra=0;
+                        i++;
+                        setLayout(result, i);
+                    }
+                    //Default, no extra answers possible.
                     else {
+                        answers.add(rG1_CheckId);
                         flagExtra=1;
                         i++;
                         setLayout(result, i);
@@ -125,15 +135,18 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
                 Toast.makeText(SuccessActivity.this,"Ikke flere spørgsmål ",Toast.LENGTH_LONG).show();
             }
 
+            //can be deleted in final product, just a helper to show answers and extraanswers chosen
             if (answers.size()>0) {
 
                     Log.d("arrayanswers", "" + answers);
+                    Log.d("ExtraAnswersarray",""+exstraAnswersArray);
 
             }
 
 
         }
 
+//      Back button - might not be implemented
 //        if (v==prevButton){
 //        if (i>0) {
 //            i--;
@@ -145,7 +158,7 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
 
 
 
-
+    //AsyncTask: getting questions from database
     private class AsyncQuestions extends AsyncTask<String, String, ArrayList<JsonHolder>> {
         ProgressDialog pdLoading = new ProgressDialog(SuccessActivity.this);
         HttpURLConnection conn;
@@ -186,7 +199,7 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
                 conn.setDoOutput(true);
                 conn.connect();
 
-                // Append parameters to URL
+                // Append parameter ID to URL
                 Uri.Builder builder = new Uri.Builder()
                         .appendQueryParameter("id", id);
                 String query = builder.build().getEncodedQuery();
@@ -333,6 +346,7 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
             Log.d("Arrayslut",""+i);
            Intent intent = new Intent(SuccessActivity.this,UploadAnswers.class);
             intent.putExtra("answersArray", answers);
+            intent.putExtra("extraanswersArray", exstraAnswersArray);
             intent.putExtra("questionArray", result);
            startActivity(intent);
 

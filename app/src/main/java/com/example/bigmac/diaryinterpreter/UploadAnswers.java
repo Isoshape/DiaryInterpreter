@@ -30,6 +30,7 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
 
     private Button upload;
     private ArrayList<Integer> answers;
+    private ArrayList<Integer> extraanswers;
     private ArrayList<JsonHolder> questions;
     private String finalString;
     StringBuilder stringBuilder = new StringBuilder();
@@ -49,13 +50,14 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             answers = extras.getIntegerArrayList("answersArray");
+            extraanswers = extras.getIntegerArrayList("extraanswersArray");
              questions = (ArrayList<JsonHolder>) getIntent().getSerializableExtra("questionArray");
 
+            int aa =0;
                // String[] questionssplit = questions.get(1).getAnswers();
                 for (int a=0;a<questions.size();a++){
 
                     stringBuilder.append(answers.get(a)+",");
-
 
                     final TextView rowTextView = new TextView(this);
                     final TextView answerTextview = new TextView(this);
@@ -68,6 +70,28 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
                     // add the textview to the linearlayout
                     ll.addView(rowTextView);
                     ll.addView(answerTextview);
+
+                    //check if any extraAnswers exist
+                    if(Integer.parseInt(questions.get(a).getExtraID())>-1){
+
+                        //If extraAnswers exits check if they are answered/activated, if true, show the answer(s)
+                        if (extraanswers.get(aa)>-1) {
+
+                            final TextView extrarowTextView = new TextView(this);
+                            final TextView extraanswerTextview = new TextView(this);
+                            extrarowTextView.setTypeface(null, Typeface.BOLD_ITALIC);
+                            extrarowTextView.setText("Ekstra spørgsmål: " + questions.get(a).getExtraQuestion());
+                            String[] extraquestionssplit = questions.get(a).getExtraAnswers();
+                            if (extraanswers.get(aa) > -1) {
+                                extraanswerTextview.setText("" + extraquestionssplit[extraanswers.get(aa)]);
+                            }
+                            ll.addView(extrarowTextView);
+                            ll.addView(extraanswerTextview);
+                        }
+                        aa++;
+
+                    }
+
 
                 }
             finalString = stringBuilder.toString();
