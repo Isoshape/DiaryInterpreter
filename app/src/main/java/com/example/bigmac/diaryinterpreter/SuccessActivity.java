@@ -5,6 +5,7 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -44,6 +45,9 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
     private TextView questionfield;
     private Button nextButton;
     private Button prevButton;
+    String fname;
+    String id;
+    int flagExtra = 1;
 
     private int i = 0;
 
@@ -65,6 +69,13 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
         nextButton = (Button) findViewById(R.id.nextquiz);
         nextButton.setOnClickListener(this);
 
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+
+            fname = extras.getString("firstname");
+            id = extras.getString("id");
+        }
+
 //        prevButton = (Button) findViewById(R.id.previousquiz);
 //        prevButton.setOnClickListener(this);
 
@@ -76,6 +87,7 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
     @Override
     public void onClick(View v) {
 
+
         if(v==nextButton){
 
             int rG1_CheckId = radioGroup.getCheckedRadioButtonId();
@@ -84,11 +96,27 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
 
             //check if array is out of bounds and if radiobutton is selected
             if (i<result.size()) {
-                //check if an answer is selected
+                //check if an answer is selected, if true insert into arraylist
                 if (rG1_CheckId>-1) {
-                    i++;
+
                     answers.add(rG1_CheckId);
-                    setLayout(result, i);
+
+                    if (Integer.parseInt(result.get(i).getExtraID())>-1 && rG1_CheckId != Integer.parseInt(result.get(i).getExtraID()) && flagExtra==1){
+                        answers.add(-1);
+                    }
+
+                    //Check for extra answers (if they are possible) flagextra is set to 0 everytime methode is called, to not enter it again
+                    if (rG1_CheckId == Integer.parseInt(result.get(i).getExtraID()) && flagExtra==1){
+
+                        showExtraQuestion(result, i);
+
+                    }
+
+                    else {
+                        flagExtra=1;
+                        i++;
+                        setLayout(result, i);
+                    }
                 }else{
                     Toast.makeText(SuccessActivity.this,"Vælg venligst et svar ",Toast.LENGTH_LONG).show();
                 }
@@ -158,6 +186,22 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
                 conn.setDoOutput(true);
                 conn.connect();
 
+                // Append parameters to URL
+                Uri.Builder builder = new Uri.Builder()
+                        .appendQueryParameter("id", id);
+                String query = builder.build().getEncodedQuery();
+
+                // Open connection for sending data
+                OutputStream os = conn.getOutputStream();
+                BufferedWriter writer = new BufferedWriter(
+                        new OutputStreamWriter(os, "UTF-8"));
+                writer.write(query);
+                writer.flush();
+                writer.close();
+                os.close();
+                conn.connect();
+
+
             } catch (IOException e1) {
                 // TODO Auto-generated catch block
                 e1.printStackTrace();
@@ -180,6 +224,10 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
                     String line=null;
                     String question=null;
                     String answers=null;
+                    String extraID=null;
+                    String extraQuestion=null;
+                    String extraAnswers=null;
+
 
                     while ((line = reader.readLine()) != null) {
                         result.append(line);
@@ -195,8 +243,11 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
                                 JSONObject jsonProductObject = arr.getJSONObject(i);
                                 question = jsonProductObject.getString("question");
                                 answers = jsonProductObject.getString("answers");
+                                extraID = jsonProductObject.getString("extraID");
+                                extraQuestion = jsonProductObject.getString("extraQuestion");
+                                extraAnswers = jsonProductObject.getString("extraAnswers");
 
-                                allquestions.add(new JsonHolder(question,answers));
+                                allquestions.add(new JsonHolder(question,answers,extraID,extraQuestion,extraAnswers));
                             }
 
                         }
@@ -284,10 +335,35 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
             intent.putExtra("answersArray", answers);
             intent.putExtra("questionArray", result);
            startActivity(intent);
-            //new AysncUpload().execute();
+
         }
 
     }//end setLayout
+
+
+    public void showExtraQuestion(ArrayList<JsonHolder> result, int i){
+        flagExtra = 0;
+        String getextraquestion = result.get(i).getExtraQuestion();
+        questionfield.setText(""+getextraquestion);
+       // get possible answers in insert them in an string array
+        String[] extraquestionssplit = result.get(i).getExtraAnswers();
+        radioGroup.removeAllViews();
+        int a = 0;
+        for (; a < extraquestionssplit.length; a++) {
+            //create radiobuttons equal to size of possible answers, string array
+            RadioButton newRadioButton = new RadioButton(SuccessActivity.this);
+            // newRadioButton.setTextColor(Color.parseColor("#03fe6d"));
+            newRadioButton.setText("" + extraquestionssplit[a]);
+            newRadioButton.setId(a);
+
+            LinearLayout.LayoutParams layoutParams = new RadioGroup.LayoutParams(
+                    RadioGroup.LayoutParams.WRAP_CONTENT,
+                    RadioGroup.LayoutParams.WRAP_CONTENT);
+            radioGroup.addView(newRadioButton, a, layoutParams);
+        }
+
+
+    }
 
 
     @Override

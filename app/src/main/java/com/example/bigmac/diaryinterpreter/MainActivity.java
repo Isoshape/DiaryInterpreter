@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Button numbersBtn = new Button(this);
                 numbersBtn.setBackground(null);
                 numbersBtn.setTextSize(30);
-                Log.d("hvad er a nu",""+a);
+                Log.d("hvad er a nu", "" + a);
 
                 numbersBtn.setText("" + (a + 1 + (i * 3)));
                 numbersBtn.setOnClickListener(this);
@@ -228,8 +228,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-
-
     //Buttons listner
     @Override
     public void onClick(View v) {
@@ -290,7 +288,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             super.onPreExecute();
 
             //this method will be running on UI thread
-            pdLoading.setMessage("\tLoading...");
+            pdLoading.setMessage("\tKontrollere brugernavn og pinkode");
             pdLoading.setCancelable(false);
             pdLoading.show();
 
@@ -380,17 +378,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         protected void onPostExecute(String result) {
 
             //this method will be running on UI thread
+            String[] values;
+            String firstname=null;
+            String dbid=null;
 
             pdLoading.dismiss();
 
 
-            if(result.equalsIgnoreCase("true"))
+
+
+            Log.d("finalresult",""+result);
+            if(result != null && !result.equalsIgnoreCase("false") && !result.equalsIgnoreCase("unsuccessful") && !result.equalsIgnoreCase("exception") )
             {
                 /* Here launching another activity when login successful. If you persist login state
                 use sharedPreferences of Android. and logout button to clear sharedPreferences.
                  */
-                Toast.makeText(MainActivity.this, "Velkommen!", Toast.LENGTH_LONG).show();
+                values = result.split(" ");
+                firstname = values[0];
+                dbid = values[1];
+
+                Toast.makeText(MainActivity.this, "Velkommen! "+firstname+" Dit id er :"+dbid, Toast.LENGTH_LONG).show();
                     Intent intent = new Intent(MainActivity.this,SuccessActivity.class);
+                intent.putExtra("firstname", firstname);
+                intent.putExtra("id", dbid);
                 startActivity(intent);
                 MainActivity.this.finish();
 
