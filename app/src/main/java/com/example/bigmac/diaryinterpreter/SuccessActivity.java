@@ -3,12 +3,9 @@ package com.example.bigmac.diaryinterpreter;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -105,18 +102,20 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
                         exstraAnswersArray.add(-1);
                     }
 
-                    //Check if extra answers is activated (if its possible) flagextra is set to 0 everytime methode is called, to not enter it again until left for main question
+                    //Check if extra answers is activated (if its possible) flagextra is set to 0 (in the methode) everytime methode is called, to not enter it again until left for main question
                     if (rG1_CheckId == Integer.parseInt(result.get(i).getExtraID()) && flagExtra==1){
 
                         answers.add(rG1_CheckId);
                         showExtraQuestion(result, i);
+
+                        //set flag=2 in order to get selected anwswer in extraanswerarray
                         flagExtra = 2;
 
                     }
                     //Check to see if extra answers is active, if so save selected value in extraanswersArrat
                     else if (flagExtra==2){
                      exstraAnswersArray.add(rG1_CheckId);
-                        flagExtra=0;
+                        flagExtra=1;
                         i++;
                         setLayout(result, i);
                     }

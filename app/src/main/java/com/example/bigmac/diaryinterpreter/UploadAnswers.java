@@ -57,7 +57,14 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
                // String[] questionssplit = questions.get(1).getAnswers();
                 for (int a=0;a<questions.size();a++){
 
-                    stringBuilder.append(answers.get(a)+",");
+                    //Checks if this is the last question and that there is no extra question combined, if true, dont put comma
+                    if (a==questions.size()-1 && Integer.parseInt(questions.get(a).getExtraID())==-1){
+                        stringBuilder.append(answers.get(a));
+                    }
+                    //else this is not last questions, just put a comma
+                    else{
+                        stringBuilder.append(answers.get(a) + ",");
+                    }
 
                     final TextView rowTextView = new TextView(this);
                     final TextView answerTextview = new TextView(this);
@@ -74,8 +81,17 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
                     //check if any extraAnswers exist
                     if(Integer.parseInt(questions.get(a).getExtraID())>-1){
 
-                        //If extraAnswers exits check if they are answered/activated, if true, show the answer(s)
+                        if (a<questions.size()-1) {
+                            stringBuilder.append(extraanswers.get(aa) + ",");
+                        }
+                        //if this is the last questions with extra question dont put comma
+                        if (a==questions.size()-1){
+                            stringBuilder.append(extraanswers.get(aa));
+                        }
+
+                        //If extraAnswers excites check if they are answered/activated, if true, show the answer(s)
                         if (extraanswers.get(aa)>-1) {
+
 
                             final TextView extrarowTextView = new TextView(this);
                             final TextView extraanswerTextview = new TextView(this);
@@ -102,9 +118,11 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
     }
     @Override
     public void onClick(View v) {
-        String id = "5";
+        //hardcoded right now, shall be transfered from prev activity
+        String userid = "10";
+        String diaryid="1944";
         if (v == upload){
-            new AysncUpload().execute(finalString,id);
+            new AysncUpload().execute(finalString,userid,diaryid);
         }
 
     }
@@ -130,7 +148,7 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
 
                 // Enter URL address where your php file resides
 
-                url = new URL("http://hadsundmotion.dk/upload.php");
+                url = new URL("http://hadsundmotion.dk/finalphpscritpforarray.php");
 
 
             } catch (MalformedURLException e) {
@@ -152,12 +170,14 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
 
                 Log.d("params0", "" + params[0]);
                 Log.d("params1",""+params[1]);
+                Log.d("params1",""+params[2]);
 
 
-                // Append parameters to URL
+                // Append parameters to URL !NEEDED: 1.Diary id_colector, Patient ID, Answers,
                 Uri.Builder builder = new Uri.Builder()
                         .appendQueryParameter("answers", params[0])
-                        .appendQueryParameter("id", params[1]);
+                        .appendQueryParameter("userid", params[1])
+                        .appendQueryParameter("diaryid", params[2]);
                 String query = builder.build().getEncodedQuery();
 
                 // Open connection for sending data
