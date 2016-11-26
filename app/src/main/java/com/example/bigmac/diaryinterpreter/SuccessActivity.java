@@ -10,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -38,7 +39,15 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
 
     public static final int CONNECTION_TIMEOUT = 10000;
     public static final int READ_TIMEOUT = 15000;
-    private RadioGroup radioGroup;
+    //private RadioGroup radioGroup;
+
+    //different dynamic views
+    LinearLayout answersHold;
+    RadioGroup rg;
+    EditText etAnswer;
+
+
+
     private TextView questionfield;
     private Button nextButton;
     private Button prevButton;
@@ -50,8 +59,8 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
 
 
     private ArrayList<JsonHolder> result = null;
-    private ArrayList<Integer> answers = new ArrayList<>();
-    private ArrayList<Integer> exstraAnswersArray = new ArrayList<>();
+    private ArrayList<String> answers = new ArrayList<>();
+    private ArrayList<String> exstraAnswersArray = new ArrayList<>();
 
 
 
@@ -62,7 +71,8 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_success);
 
-        radioGroup = (RadioGroup) findViewById(R.id.radioGroup);
+        //radioGroup = (RadioGroup) findViewById(R.id.radioGroup);
+        answersHold = (LinearLayout) findViewById(R.id.answerHolder);
         questionfield = (TextView) findViewById(R.id.main_title_textView);
         nextButton = (Button) findViewById(R.id.nextquiz);
         nextButton.setOnClickListener(this);
@@ -86,75 +96,27 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
     public void onClick(View v) {
 
 
-        if(v==nextButton){
+        if (v == nextButton) {
 
-            int rG1_CheckId = radioGroup.getCheckedRadioButtonId();
-            Log.d("radiobuttonn", "" + rG1_CheckId);
-            radioGroup.clearCheck();
+            Log.d("btn I", "" + i);
 
-            //check if array holding jsonObjects is out of bounds
-            if (i<result.size()) {
-                //check if an answer is selected, if true proceed
-                if (rG1_CheckId>-1) {
+            answersHold.removeAllViews();
 
-                    //check if extra answer is missed/not activated in case of this save the value as -1 into xtraanswerArray (meaning this questions is not answered/activated)
-                    if (Integer.parseInt(result.get(i).getExtraID())>-1 && rG1_CheckId != Integer.parseInt(result.get(i).getExtraID()) && flagExtra==1){
-                        exstraAnswersArray.add(-1);
-                    }
+            switch (result.get(i).getType()) {
+                case 1:
+                    handleMultipleChoice();
+                    break;
+                case 2:
+                    handleUserInput();
+                    break;
 
-                    //Check if extra answers is activated (if its possible) flagextra is set to 0 (in the methode) everytime methode is called, to not enter it again until left for main question
-                    if (rG1_CheckId == Integer.parseInt(result.get(i).getExtraID()) && flagExtra==1){
-
-                        answers.add(rG1_CheckId);
-                        showExtraQuestion(result, i);
-
-                        //set flag=2 in order to get selected anwswer in extraanswerarray
-                        flagExtra = 2;
-
-                    }
-                    //Check to see if extra answers is active, if so save selected value in extraanswersArrat
-                    else if (flagExtra==2){
-                     exstraAnswersArray.add(rG1_CheckId);
-                        flagExtra=1;
-                        i++;
-                        setLayout(result, i);
-                    }
-                    //Default, no extra answers possible.
-                    else {
-                        answers.add(rG1_CheckId);
-                        flagExtra=1;
-                        i++;
-                        setLayout(result, i);
-                    }
-                }else{
-                    Toast.makeText(SuccessActivity.this,"Vælg venligst et svar ",Toast.LENGTH_LONG).show();
-                }
-            }
-            else{
-                Toast.makeText(SuccessActivity.this,"Ikke flere spørgsmål ",Toast.LENGTH_LONG).show();
-            }
-
-            //can be deleted in final product, just a helper to show answers and extraanswers chosen
-            if (answers.size()>0) {
-
-                    Log.d("arrayanswers", "" + answers);
-                    Log.d("ExtraAnswersarray",""+exstraAnswersArray);
 
             }
 
-
+            Log.d("MA", "" + answers);
+            Log.d("EA", "" + exstraAnswersArray);
         }
-
-//      Back button - might not be implemented
-//        if (v==prevButton){
-//        if (i>0) {
-//            i--;
-//            setLayout(result, i);
-//        }
-//        }
-
     }
-
 
 
     //AsyncTask: getting questions from database
@@ -239,6 +201,8 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
                     String extraID=null;
                     String extraQuestion=null;
                     String extraAnswers=null;
+                    int type;
+
 
 
                     while ((line = reader.readLine()) != null) {
@@ -258,8 +222,11 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
                                 extraID = jsonProductObject.getString("extraID");
                                 extraQuestion = jsonProductObject.getString("extraQuestion");
                                 extraAnswers = jsonProductObject.getString("extraAnswers");
+                                type = jsonProductObject.getInt("type");
+                                //get int TYPE from dB
 
-                                allquestions.add(new JsonHolder(question,answers,extraID,extraQuestion,extraAnswers));
+
+                                allquestions.add(new JsonHolder(question,answers,extraID,extraQuestion,extraAnswers,type));
                             }
 
                         }
@@ -279,7 +246,7 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
                 conn.disconnect();
             }
 
-            Log.d("arraylist", "" + allquestions);
+
             return (allquestions);
         }
 
@@ -293,7 +260,9 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
 
             if (result != null) {
                 Toast.makeText(SuccessActivity.this,"Antal spørgmål blev hentet: "+result.size(),Toast.LENGTH_LONG).show();
-                setLayout(result, i);
+
+            typeHandler();
+
 
             } else if (result == null || result.size()==0) {
 
@@ -304,20 +273,119 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
 
     }//end asynClass
 
-    public void setLayout(ArrayList<JsonHolder> result, int i){
 
+    public void typeHandler(){
+
+        //TYPEHANDLER() is responsible for activating the correct layout
+
+        //MÅ IKKE KALDES HVIS I ER STØRRE END INDEX,
+        if (i < result.size()) {
+            Log.d("1. i= ", "" + i);
+            answersHold.removeAllViews();
+
+            //Case 1 - MultipleChoice
+            if (result.get(i).getType() == 1) {
+                setLayoutMultiple();
+            }//end Case 1
+
+            //Case 2 - User input
+            if (result.get(i).getType() == 2) {
+
+                setLayoutUserInput();
+            }// end Case 2
+        }
+        //this makes sure that the last data is saved, and no more layouts are being called - only next activity.
+        else if (i == result.size()){
+            Log.d("Arrayslut",""+i);
+            Intent intent = new Intent(SuccessActivity.this,UploadAnswers.class);
+            intent.putExtra("answersArray", answers);
+            intent.putExtra("extraanswersArray", exstraAnswersArray);
+            intent.putExtra("questionArray", result);
+            startActivity(intent);
+        }
+
+
+
+    }
+
+// !! MULTLTIPLE CHOICE MODULE !! //
+    public void handleMultipleChoice(){
+
+        Log.d("handleMulti",""+i);
+
+        //Check if view has been created or not. If this is the first time, view is null and needs to be created
+        if (rg==null) {
+            Toast.makeText(SuccessActivity.this, "Vælg venligst et svar ", Toast.LENGTH_LONG).show();
+            typeHandler();
+
+        }
+        String rG1_CheckId = ""+rg.getCheckedRadioButtonId();
+        Log.d("radiobuttonn", "" + rG1_CheckId);
+        rg.clearCheck();
+        //check if array holding jsonObjects is out of bounds
+        //check if an answer is selected, if true proceed
+        if (Integer.parseInt(rG1_CheckId) > -1) {
+
+            //check if extra answer is missed/not activated in case of this save the value as -1 into xtraanswerArray (meaning this questions is not answered/activated)
+            if (Integer.parseInt(result.get(i).getExtraID()) > -1 && Integer.parseInt(rG1_CheckId) != Integer.parseInt(result.get(i).getExtraID()) && flagExtra == 1) {
+                exstraAnswersArray.add("-1");
+            }
+
+            //Check if extra answers is activated (if its possible) flagextra is set to 2 (in the statement) everytime methode is called, to not enter it again until left for main question
+            if (Integer.parseInt(rG1_CheckId) == Integer.parseInt(result.get(i).getExtraID()) && flagExtra == 1) {
+
+                answers.add(rG1_CheckId);
+                showExtraQuestion();
+                //set flag=2 in order to get selected extra answer in extraanswerarray
+                flagExtra = 2;
+
+            }
+            //Check to see if extra an
+            // swers is active, if so save selected value in extraanswersArrat, and go back to flagvalue=1 - default
+            else if (flagExtra == 2) {
+
+                exstraAnswersArray.add(rG1_CheckId);
+                flagExtra = 1;
+
+                i++;
+                typeHandler();
+//                if(result.get(i).getType()==1) {
+//                    setLayoutMultiple();
+//                }
+            }
+            //Default, no extra answers possible.
+            else {
+                answers.add(rG1_CheckId);
+                flagExtra = 1;
+
+                    i++;
+
+                typeHandler();
+//                if(result.get(i).getType()==1) {
+//                    setLayoutMultiple();
+//                }
+            }
+        }   if (Integer.parseInt(rG1_CheckId) == -1) {
+            Toast.makeText(SuccessActivity.this, "Vælg venligst et svar ", Toast.LENGTH_LONG).show();
+            typeHandler();
+        }
+
+    }
+    public void setLayoutMultiple(){
+
+        rg = new RadioGroup(getApplicationContext()); //create the RadioGroup
+        rg.setOrientation(RadioGroup.VERTICAL);//or RadioGroup.VERTICAL
+        rg.removeAllViews();
         if (i<result.size()) {
-            Log.d("Hvad er i", "I er nu " + i);
+           // Log.d("Hvad er i", "I er nu " + i);
             String getquestion = result.get(i).getQuestion();
-            Log.d("inde i array", "" + getquestion);
+          //  Log.d("inde i array", "" + getquestion);
 
             //Get question from arraylist
             questionfield.setText(""+(i+1)+" / "+result.size()+ " " + getquestion);
 
             //get possible answers in insert them in an string array
             String[] questionssplit = result.get(i).getAnswers();
-            Log.d("StringArray", "" + questionssplit[0]);
-            radioGroup.removeAllViews();
             int a = 0;
             for (; a < questionssplit.length; a++) {
                 //create radiobuttons equal to size of possible answers, string array
@@ -326,41 +394,39 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
                 newRadioButton.setText("" + questionssplit[a]);
                 newRadioButton.setId(a);
 
-                LinearLayout.LayoutParams layoutParams = new RadioGroup.LayoutParams(
-                        RadioGroup.LayoutParams.WRAP_CONTENT,
-                        RadioGroup.LayoutParams.WRAP_CONTENT);
-                radioGroup.addView(newRadioButton, a, layoutParams);
+//                LinearLayout.LayoutParams layoutParams = new RadioGroup.LayoutParams(
+//                        RadioGroup.LayoutParams.WRAP_CONTENT,
+//                        RadioGroup.LayoutParams.WRAP_CONTENT);
+                rg.addView(newRadioButton, a);
 
-                if(i==result.size()-1) {
-
-                    nextButton.setText("Afslut");
-                }
-                else {
-                    nextButton.setText("Næste spørgsmål");
-                }
             }//end for
+            answersHold.addView(rg);
+            if(i==result.size()-1) {
+
+                nextButton.setText("Afslut");
+            }
+            else {
+                nextButton.setText("Næste spørgsmål");
+            }
 
         }
-        else{
-            Log.d("Arrayslut",""+i);
-           Intent intent = new Intent(SuccessActivity.this,UploadAnswers.class);
-            intent.putExtra("answersArray", answers);
-            intent.putExtra("extraanswersArray", exstraAnswersArray);
-            intent.putExtra("questionArray", result);
-           startActivity(intent);
-
-        }
-
+//        else{
+//            Log.d("Arrayslut",""+i);
+//           Intent intent = new Intent(SuccessActivity.this,UploadAnswers.class);
+//            intent.putExtra("answersArray", answers);
+//            intent.putExtra("extraanswersArray", exstraAnswersArray);
+//            intent.putExtra("questionArray", result);
+//           startActivity(intent);
+//        }
     }//end setLayout
 
 
-    public void showExtraQuestion(ArrayList<JsonHolder> result, int i){
-        flagExtra = 0;
+    public void showExtraQuestion(){
+        rg.removeAllViews();
         String getextraquestion = result.get(i).getExtraQuestion();
         questionfield.setText(""+getextraquestion);
        // get possible answers in insert them in an string array
         String[] extraquestionssplit = result.get(i).getExtraAnswers();
-        radioGroup.removeAllViews();
         int a = 0;
         for (; a < extraquestionssplit.length; a++) {
             //create radiobuttons equal to size of possible answers, string array
@@ -369,14 +435,59 @@ public class SuccessActivity extends AppCompatActivity implements View.OnClickLi
             newRadioButton.setText("" + extraquestionssplit[a]);
             newRadioButton.setId(a);
 
-            LinearLayout.LayoutParams layoutParams = new RadioGroup.LayoutParams(
-                    RadioGroup.LayoutParams.WRAP_CONTENT,
-                    RadioGroup.LayoutParams.WRAP_CONTENT);
-            radioGroup.addView(newRadioButton, a, layoutParams);
-        }
+            rg.addView(newRadioButton, a);
 
+        }
+        answersHold.addView(rg);
 
     }
+    // !! MULTLTIPLE CHOICE MODULE FINISH !! //
+
+
+    // !! USER INPUT MODULE !! //
+    public void handleUserInput(){
+
+        Log.d("handleuser",""+i);
+        if (etAnswer == null){
+            Log.d("etanswer er nullobject", "" + i);
+            typeHandler();
+        }
+        //Check if editText is empty
+        if (etAnswer.getText().toString().matches("")){
+            typeHandler();
+            Toast.makeText(SuccessActivity.this, "Indtast venligst et svar ", Toast.LENGTH_LONG).show();
+
+        }
+        else {
+            String answer = etAnswer.getText().toString();
+
+            Log.d("inputuser",""+answer);
+            answers.add(answer);
+
+                i++;
+            //clear editText (not sure if needed)
+            etAnswer.setText("");
+            //after stuff is handled call typehandler in order for next layout
+            typeHandler();
+        }
+
+    }
+
+
+
+    public void setLayoutUserInput(){
+
+        String getquestion = result.get(i).getQuestion();
+        questionfield.setText(getquestion);
+
+        etAnswer = new EditText(this);
+        etAnswer.setBackgroundResource(R.drawable.roundedbutton);
+        etAnswer.setWidth(30);
+
+        answersHold.addView(etAnswer);
+    }
+    // !! USER INPUT MODULE FINISH !! //
+
 
 
     @Override

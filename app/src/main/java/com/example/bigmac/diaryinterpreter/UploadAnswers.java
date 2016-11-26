@@ -29,8 +29,8 @@ import java.util.ArrayList;
 public class UploadAnswers extends AppCompatActivity implements View.OnClickListener {
 
     private Button upload;
-    private ArrayList<Integer> answers;
-    private ArrayList<Integer> extraanswers;
+    private ArrayList<String> answers;
+    private ArrayList<String> extraanswers;
     private ArrayList<JsonHolder> questions;
     private String finalString;
     StringBuilder stringBuilder = new StringBuilder();
@@ -49,10 +49,11 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
 
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
-            answers = extras.getIntegerArrayList("answersArray");
-            extraanswers = extras.getIntegerArrayList("extraanswersArray");
+            answers = extras.getStringArrayList("answersArray");
+            extraanswers = extras.getStringArrayList("extraanswersArray");
              questions = (ArrayList<JsonHolder>) getIntent().getSerializableExtra("questionArray");
 
+            //used for EQ iterator
             int aa =0;
                // String[] questionssplit = questions.get(1).getAnswers();
                 for (int a=0;a<questions.size();a++){
@@ -72,13 +73,23 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
                     rowTextView.setTypeface(null, Typeface.BOLD);
                     rowTextView.setText(""+questions.get(a).getQuestion());
                     String[] questionssplit = questions.get(a).getAnswers();
-                    answerTextview.setText(""+questionssplit[answers.get(a)]);
+
+                    // -- CHECK FOR TYPE HERE -- //
+
+                    //1 = multiplechoice
+                    if(questions.get(a).getType()==1) {
+                        answerTextview.setText("" + questionssplit[Integer.parseInt(answers.get(a))]);
+                    }
+                    //2 = userInput
+                    if(questions.get(a).getType()==2) {
+                        answerTextview.setText("" + answers.get(a));
+                    }
 
                     // add the textview to the linearlayout
                     ll.addView(rowTextView);
                     ll.addView(answerTextview);
 
-                    //check if any extraAnswers exist
+                    //check if any extraAnswers exists (only viable for multiplechoice questions at the moment
                     if(Integer.parseInt(questions.get(a).getExtraID())>-1){
 
                         if (a<questions.size()-1) {
@@ -90,7 +101,7 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
                         }
 
                         //If extraAnswers excites check if they are answered/activated, if true, show the answer(s)
-                        if (extraanswers.get(aa)>-1) {
+                        if (Integer.parseInt(extraanswers.get(aa))>-1) {
 
 
                             final TextView extrarowTextView = new TextView(this);
@@ -98,8 +109,8 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
                             extrarowTextView.setTypeface(null, Typeface.BOLD_ITALIC);
                             extrarowTextView.setText("Ekstra spørgsmål: " + questions.get(a).getExtraQuestion());
                             String[] extraquestionssplit = questions.get(a).getExtraAnswers();
-                            if (extraanswers.get(aa) > -1) {
-                                extraanswerTextview.setText("" + extraquestionssplit[extraanswers.get(aa)]);
+                            if (Integer.parseInt(extraanswers.get(aa)) > -1) {
+                                extraanswerTextview.setText("" + extraquestionssplit[Integer.parseInt(extraanswers.get(aa))]);
                             }
                             ll.addView(extrarowTextView);
                             ll.addView(extraanswerTextview);
@@ -109,7 +120,7 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
                     }
 
 
-                }
+                }//end loop!
             finalString = stringBuilder.toString();
             Log.d("mystring",""+finalString);
 
@@ -124,7 +135,6 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
         if (v == upload){
             new AysncUpload().execute(finalString,userid,diaryid);
         }
-
     }
 
     //Class: Upload answers to database via php - not yet implementet

@@ -6,6 +6,8 @@ public class JsonHolder implements Serializable {
 
     private int id;
 
+    private int type;
+
     private String question;
 
     private String[] splitanswers;
@@ -17,7 +19,7 @@ public class JsonHolder implements Serializable {
     private String[] extraAnswers;
 
 
-    public JsonHolder(String question, String answers, String extraID, String extraQuestions, String extraAnswers) {
+    public JsonHolder(String question, String answers, String extraID, String extraQuestions, String extraAnswers, int type) {
 
 
         this.question = question;
@@ -26,6 +28,7 @@ public class JsonHolder implements Serializable {
         this.extraID = extraID;
         this.extraQuestion = extraQuestions;
         this.extraAnswers = extraAnswers.split(",");
+        this.type = type;
 
     }
 
@@ -33,6 +36,11 @@ public class JsonHolder implements Serializable {
 
         return id;
 
+    }
+
+    public int getType(){
+
+        return type;
     }
 
     public void setId(int id) {
