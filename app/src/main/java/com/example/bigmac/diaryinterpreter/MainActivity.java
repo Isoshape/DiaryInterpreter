@@ -31,6 +31,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
+
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     // CONNECTION_TIMEOUT and READ_TIMEOUT are in milliseconds
@@ -51,11 +52,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private int focusIndex;
     ArrayList<EditText> btnArray = new ArrayList<>();
 
+    //PersonInfo personInfo = new PersonInfo();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
 
         pref = getApplicationContext().getSharedPreferences("MyPref", 0);
         editor = pref.edit();
@@ -63,8 +67,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         userBtn = (Button) findViewById(R.id.changeusernameBtn);
         userBtn.setOnClickListener(this);
 
+        //See if any usename is stored
         alterUsernameSave = pref.getString("brugernavn", null);
-        Log.d("Saved",""+alterUsernameSave);
+
 
         //if first time user, promp dialog box asking for username. The methode saves the username in sharedprefferences
         if (alterUsernameSave==null) {
@@ -240,6 +245,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         universalbutton = (Button) v;
 
+        Log.d("Du klikkede",""+universalbutton.getText().toString());
+
 
         String letterpressed = universalbutton.getText().toString();
         if (letterpressed.equals(""+1)||
@@ -384,23 +391,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             pdLoading.dismiss();
 
-
-
-
             Log.d("finalresult",""+result);
             if(result != null && !result.equalsIgnoreCase("false") && !result.equalsIgnoreCase("unsuccessful") && !result.equalsIgnoreCase("exception") )
             {
                 /* Here launching another activity when login successful. If you persist login state
                 use sharedPreferences of Android. and logout button to clear sharedPreferences.
                  */
+
                 values = result.split(" ");
                 firstname = values[0];
                 dbid = values[1];
 
-                Toast.makeText(MainActivity.this, "Velkommen! "+firstname+" Dit id er :"+dbid, Toast.LENGTH_LONG).show();
-                    Intent intent = new Intent(MainActivity.this,SuccessActivity.class);
-                intent.putExtra("firstname", firstname);
-                intent.putExtra("id", dbid);
+                PersonInfo.setFirstName(firstname);
+                PersonInfo.setDiaryID(dbid);
+
+                Toast.makeText(MainActivity.this, "Velkommen! "+firstname+" Dit id er :"+dbid, Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(MainActivity.this,MainUserActivity.class);
                 startActivity(intent);
                 MainActivity.this.finish();
 

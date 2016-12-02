@@ -250,7 +250,7 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
                 use sharedPreferences of Android. and logout button to clear sharedPreferences.
                  */
                 Toast.makeText(UploadAnswers.this, "Upload gennemført - tak!", Toast.LENGTH_LONG).show();
-                Intent back = new Intent(UploadAnswers.this,MainActivity.class);
+                Intent back = new Intent(UploadAnswers.this,MainUserActivity.class);
                 startActivity(back);
 
 

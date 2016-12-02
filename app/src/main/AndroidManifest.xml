@@ -19,10 +19,11 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".SuccessActivity"
+            android:name=".InterpreterActivity"
             android:label="@string/title_activity_success"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity android:name=".UploadAnswers"></activity>
+        <activity android:name=".UploadAnswers" />
+        <activity android:name=".MainUserActivity"></activity>
     </application>
 
 </manifest>
