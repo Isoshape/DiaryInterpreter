@@ -29,6 +29,8 @@ import java.util.ArrayList;
 public class UploadAnswers extends AppCompatActivity implements View.OnClickListener {
 
     private Button upload;
+    private Button regret;
+    LinearLayout ll;
     private ArrayList<String> answers;
     private ArrayList<String> extraanswers;
     private ArrayList<JsonHolder> questions;
@@ -43,90 +45,101 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
         upload = (Button) findViewById(R.id.uploadButton);
         upload.setOnClickListener(this);
 
+        regret = (Button) findViewById(R.id.regretBtn);
+        regret.setOnClickListener(this);
 
 
-        LinearLayout ll = (LinearLayout) findViewById(R.id.uploadlinear);
+
+        ll = (LinearLayout) findViewById(R.id.uploadlinear);
 
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             answers = extras.getStringArrayList("answersArray");
             extraanswers = extras.getStringArrayList("extraanswersArray");
-             questions = (ArrayList<JsonHolder>) getIntent().getSerializableExtra("questionArray");
+            questions = PersonInfo.getQuestionsArray();
+//             questions = (ArrayList<JsonHolder>) getIntent().getSerializableExtra("questionArray");
 
-            //used for EQ iterator
-            int aa =0;
-               // String[] questionssplit = questions.get(1).getAnswers();
-                for (int a=0;a<questions.size();a++){
-
-                    //Checks if this is the last question and that there is no extra question combined, if true, dont put comma
-                    if (a==questions.size()-1 && Integer.parseInt(questions.get(a).getExtraID())==-1){
-                        stringBuilder.append(answers.get(a));
-                    }
-                    //else this is not last questions, just put a comma
-                    else{
-                        stringBuilder.append(answers.get(a) + ",");
-                    }
-
-                    final TextView rowTextView = new TextView(this);
-                    final TextView answerTextview = new TextView(this);
-                    // set some properties of rowTextView or something
-                    rowTextView.setTypeface(null, Typeface.BOLD);
-                    rowTextView.setText(""+questions.get(a).getQuestion());
-                    String[] questionssplit = questions.get(a).getAnswers();
-
-                    // -- CHECK FOR TYPE HERE -- //
-
-                    //1 = multiplechoice
-                    if(questions.get(a).getType()==1) {
-                        answerTextview.setText("" + questionssplit[Integer.parseInt(answers.get(a))]);
-                    }
-                    //2 = userInput
-                    if(questions.get(a).getType()==2) {
-                        answerTextview.setText("" + answers.get(a));
-                    }
-
-                    // add the textview to the linearlayout
-                    ll.addView(rowTextView);
-                    ll.addView(answerTextview);
-
-                    //check if any extraAnswers exists (only viable for multiplechoice questions at the moment
-                    if(Integer.parseInt(questions.get(a).getExtraID())>-1){
-
-                        if (a<questions.size()-1) {
-                            stringBuilder.append(extraanswers.get(aa) + ",");
-                        }
-                        //if this is the last questions with extra question dont put comma
-                        if (a==questions.size()-1){
-                            stringBuilder.append(extraanswers.get(aa));
-                        }
-
-                        //If extraAnswers excites check if they are answered/activated, if true, show the answer(s)
-                        if (Integer.parseInt(extraanswers.get(aa))>-1) {
-
-
-                            final TextView extrarowTextView = new TextView(this);
-                            final TextView extraanswerTextview = new TextView(this);
-                            extrarowTextView.setTypeface(null, Typeface.BOLD_ITALIC);
-                            extrarowTextView.setText("Ekstra spørgsmål: " + questions.get(a).getExtraQuestion());
-                            String[] extraquestionssplit = questions.get(a).getExtraAnswers();
-                            if (Integer.parseInt(extraanswers.get(aa)) > -1) {
-                                extraanswerTextview.setText("" + extraquestionssplit[Integer.parseInt(extraanswers.get(aa))]);
-                            }
-                            ll.addView(extrarowTextView);
-                            ll.addView(extraanswerTextview);
-                        }
-                        aa++;
-
-                    }
-
-
-                }//end loop!
-            finalString = stringBuilder.toString();
-            Log.d("mystring",""+finalString);
+            showAnswers();
 
         }
 
     }
+
+
+    public void showAnswers(){
+        //used for EQ iterator
+        int aa =0;
+        // String[] questionssplit = questions.get(1).getAnswers();
+        for (int a=0;a<questions.size();a++){
+
+            //Checks if this is the last question and that there is no extra question combined, if true, dont put comma
+            if (a==questions.size()-1 && Integer.parseInt(questions.get(a).getExtraID())==-1){
+                stringBuilder.append(answers.get(a));
+            }
+            //else this is not last questions, just put a comma
+            else{
+                stringBuilder.append(answers.get(a) + ",");
+            }
+
+            final TextView rowTextView = new TextView(this);
+            final TextView answerTextview = new TextView(this);
+            // set some properties of rowTextView or something
+            rowTextView.setTypeface(null, Typeface.BOLD);
+            rowTextView.setText(""+questions.get(a).getQuestion());
+            String[] questionssplit = questions.get(a).getAnswers();
+
+            // -- CHECK FOR TYPE HERE -- //
+
+            //1 = multiplechoice
+            if(questions.get(a).getType()==1) {
+                answerTextview.setText("" + questionssplit[Integer.parseInt(answers.get(a))]);
+            }
+            //2 = userInput
+            if(questions.get(a).getType()==2) {
+                answerTextview.setText("" + answers.get(a));
+            }
+
+            // add the textview to the linearlayout
+            ll.addView(rowTextView);
+            ll.addView(answerTextview);
+
+            //check if any extraAnswers exists (only viable for multiplechoice questions at the moment
+            if(Integer.parseInt(questions.get(a).getExtraID())>-1){
+
+                if (a<questions.size()-1) {
+                    stringBuilder.append(extraanswers.get(aa) + ",");
+                }
+                //if this is the last questions with extra question dont put comma
+                if (a==questions.size()-1){
+                    stringBuilder.append(extraanswers.get(aa));
+                }
+
+                //If extraAnswers excites check if they are answered/activated, if true, show the answer(s)
+                if (Integer.parseInt(extraanswers.get(aa))>-1) {
+
+
+                    final TextView extrarowTextView = new TextView(this);
+                    final TextView extraanswerTextview = new TextView(this);
+                    extrarowTextView.setTypeface(null, Typeface.BOLD_ITALIC);
+                    extrarowTextView.setText("Ekstra spørgsmål: " + questions.get(a).getExtraQuestion());
+                    String[] extraquestionssplit = questions.get(a).getExtraAnswers();
+                    if (Integer.parseInt(extraanswers.get(aa)) > -1) {
+                        extraanswerTextview.setText("" + extraquestionssplit[Integer.parseInt(extraanswers.get(aa))]);
+                    }
+                    ll.addView(extrarowTextView);
+                    ll.addView(extraanswerTextview);
+                }
+                aa++;
+
+            }
+
+
+        }//end loop!
+        finalString = stringBuilder.toString();
+        Log.d("mystring",""+finalString);
+    }
+
+
     @Override
     public void onClick(View v) {
         //hardcoded right now, shall be transfered from prev activity
@@ -134,6 +147,13 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
         String diaryid="1944";
         if (v == upload){
             new AysncUpload().execute(finalString,userid,diaryid);
+        }
+
+        if (v == regret){
+
+            Intent i = new Intent(UploadAnswers.this,MainUserActivity.class);
+            startActivity(i);
+
         }
     }
 
