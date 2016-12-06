@@ -46,19 +46,23 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
     //Must be programmatically made
     private Button launchInterpreterBtn;
 
+    //Layout for events placement
+    //private LinearLayout eventsholder;
+    private LinearLayout timeEventsHolder;
+    private LinearLayout normalEventsHolder;
 
-    private LinearLayout eventsholder;
-
+    //Timeout fields
     public static final int CONNECTION_TIMEOUT = 10000;
     public static final int READ_TIMEOUT = 15000;
 
+    //Questions and Events arrays
     ArrayList<JsonHolder> allquestions = new ArrayList<JsonHolder>();
     ArrayList<EventHolder> allEvents = new ArrayList<EventHolder>();
 
+    //php connector
     HttpURLConnection conn;
     URL url = null;
 
-    //MULIGHED FOR AT TILGÅ HOVEDEDAGBOG + VIS FORSKELLIGE HÆNDELSES MULIGHEDER
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,19 +72,21 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
         pref = getApplicationContext().getSharedPreferences("MyPref", 0);
         editor = pref.edit();
 
-        eventsholder = (LinearLayout) findViewById(R.id.eventsLayout);
+       // eventsholder = (LinearLayout) findViewById(R.id.eventsLayout);
+        timeEventsHolder = (LinearLayout) findViewById(R.id.timeEvents);
+        normalEventsHolder = (LinearLayout) findViewById(R.id.normalEvents);
 
         launchInterpreterBtn = (Button) findViewById(R.id.InterpreterBtn);
         launchInterpreterBtn.setOnClickListener(this);
         TextView welcome = (TextView) findViewById(R.id.welcomeTextEdit);
         welcome.setText("Velkommen " + PersonInfo.getFirstName());
 
-        //Check if data is allrdy stored from previous session
+        //Check if data (questions + events) is allrdy stored from previous session
         jsonQuestionStringData = pref.getString("jsondata",null);
         jsonEventsStringData = pref.getString("jsoneventdata",null);
         //
 
-
+        //if data is availbe parse the data
         if (jsonQuestionStringData != null && jsonEventsStringData != null){
 
             parseJsonQuestions();
@@ -89,7 +95,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
         }
 
-        //if data is not avalible fetch it from database
+        //if data is not avalible fetch it from database post execute will call pass methodes
         else {
             new AsyncQuestions().execute();
 
@@ -100,35 +106,35 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
     //Methode for creating diary buttons + events buttons/switchs
     public void setLayout(){
 
+        //MIssing diary buttons
+        //SAVE DATE IN SHAREDPREF WHEN DIARY IS RUN. WHEN THIS ACTIVITY RUNS CHECK SP, DEFAULT RETURN VALUE SHOULD BE THIS DATE = MEANING NO DIARY HAS EVER BEEN RUN!
+
         Log.d("HEJ FRA LAYOUT","HEJ HEJ");
-    //SAVE DATE IN SHAREDPREF WHEN DIARY IS RUN. WHEN THIS ACTIVITY RUNS CHECK SP, DEFAULT RETURN VALUE SHOULD BE THIS DATE = MEANING NO DIARY HAS EVER BEEN RUN!
         for (int j = 0; j < allEvents.size(); j++) {
 
+            //If the eventype is 1, this equals to time event = create switch
             if (allEvents.get(j).getEventType()==1){
                 Switch switchTag = new Switch(this);
                 switchTag.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
                 switchTag.setText("" + allEvents.get(j).getEventName());
                 switchTag.setTag(allEvents.get(j).getEventType() + "," + allEvents.get(j).getEventID());
                 switchTag.setOnClickListener(switchHandler);
+                //when creating the button, get the switch state if it was previously set, if not set to false
                 switchTag.setChecked(pref.getBoolean("switchState"+allEvents.get(j).getEventID(),false));
                 //switchTag.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener());
-                eventsholder.addView(switchTag);
+                timeEventsHolder.addView(switchTag);
 
             }
-
+            //if the eventype is 2, this equals to question event = create button
             if (allEvents.get(j).getEventType()==2){
                 Button btnTag = new Button(this);
                 btnTag.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
                 btnTag.setText("" + allEvents.get(j).getEventName());
                 btnTag.setTag(allEvents.get(j).getEventType() + "," + allEvents.get(j).getEventID());
-
                 btnTag.setOnClickListener(myhandler2);
-
-                eventsholder.addView(btnTag);
+                normalEventsHolder.addView(btnTag);
             }
-
         }
-
     }
 
     //Methode for parsin Json Array with Questions
@@ -142,13 +148,14 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
 
                 JSONObject jsonProductObject = jsonArrayQuestions.getJSONObject(i);
+                int questionGrp = jsonProductObject.getInt("questionGrp");
                 String question = jsonProductObject.getString("question");
                 String answers = jsonProductObject.getString("answers");
-                String extraID = jsonProductObject.getString("extraID");
+                String extraID = jsonProductObject.getString("extraTrigger");
                 String extraQuestion = jsonProductObject.getString("extraQuestion");
                 String  extraAnswers = jsonProductObject.getString("extraAnswers");
-                int type = jsonProductObject.getInt("type");
-                allquestions.add(new JsonHolder(question, answers, extraID, extraQuestion, extraAnswers, type));
+                int type = jsonProductObject.getInt("questionType");
+                allquestions.add(new JsonHolder(questionGrp,question, answers, extraID, extraQuestion, extraAnswers, type));
             }
 
             Log.d("ArrayQuestions",""+jsonArrayQuestions);
@@ -197,12 +204,10 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
             String eventType = eventInfo[0];
             String eventID = eventInfo[1];
 
-            if (eventType.equalsIgnoreCase("2")){
-
                 Log.d("Event  ",""+eventType);
                 Log.d("ID",""+eventID);
 
-            }
+
 
         }
     };
@@ -224,12 +229,16 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
             if (universalSwitch.isChecked()){
 
+                //Sets which questions belongs to this event (questionGrp)
+                PersonInfo.setQuestionGrp(Integer.parseInt(eventID));
+
                 long startTime = System.currentTimeMillis();
                 //Saving the state of the switch, for when returning to the activity
                 editor.putBoolean("switchState" + eventID, true);
                 //saving the timestart value
                 editor.putLong("starttime"+eventID,+System.currentTimeMillis());
                 editor.commit();
+                activateIntepreter();
 
             }
 
@@ -271,10 +280,18 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
         if (v==launchInterpreterBtn){
 
-            Intent launchInterpreter = new Intent(MainUserActivity.this,InterpreterActivity.class);
-            startActivity(launchInterpreter);
+            //The diary always have questionGrp = 0;
+            PersonInfo.setQuestionGrp(0);
+            activateIntepreter();
 
         }
+    }
+
+    public void activateIntepreter(){
+
+        Intent launchInterpreter = new Intent(MainUserActivity.this,InterpreterActivity.class);
+        startActivity(launchInterpreter);
+
     }
 
     //AsyncTask: getting questions from database
@@ -295,9 +312,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
         protected String doInBackground(String... params) {
 
             String resultEvents = getEvents();
-           String resultQuestion = getQuestions();
-
-
+            String resultQuestion = getQuestions();
             return resultQuestion + " " + resultEvents;
         }
 
@@ -388,6 +403,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
                 while ((line = reader.readLine()) != null) {
                     result.append(line);
+                    Log.d("db",""+line);
 
 
                     try {
@@ -480,10 +496,6 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
                 StringBuilder result = new StringBuilder();
 
                 String line=null;
-                String eventID=null;
-                int eventType;
-                String eventName=null;
-
 
                 while ((line = reader.readLine()) != null) {
                     result.append(line);

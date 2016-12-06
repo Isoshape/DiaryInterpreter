@@ -30,6 +30,9 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
 
     private Button upload;
     private Button regret;
+
+    private TextView uploadtext;
+
     LinearLayout ll;
     private ArrayList<String> answers;
     private ArrayList<String> extraanswers;
@@ -48,7 +51,8 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
         regret = (Button) findViewById(R.id.regretBtn);
         regret.setOnClickListener(this);
 
-
+        uploadtext = (TextView) findViewById(R.id.uploadText);
+        //PROGRAMMATICALLY SET UP LAYOUT IFT. EVENTYPE / IS IS TIME QUESTIONS OR JUST REGULAR QUESTIONS.
 
         ll = (LinearLayout) findViewById(R.id.uploadlinear);
 
@@ -56,10 +60,18 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
         if (extras != null) {
             answers = extras.getStringArrayList("answersArray");
             extraanswers = extras.getStringArrayList("extraanswersArray");
-            questions = PersonInfo.getQuestionsArray();
-//             questions = (ArrayList<JsonHolder>) getIntent().getSerializableExtra("questionArray");
+           // questions = PersonInfo.getQuestionsArray();
+            questions = (ArrayList<JsonHolder>) getIntent().getSerializableExtra("questionArray");
 
-            showAnswers();
+            if (questions.size()>0) {
+                showAnswers();
+            }
+
+            //If the other activity passed an empty question array this means no question is avalible
+            //most likely a time event without questions
+            if (questions.size()==0){
+                noAnswers();
+            }
 
         }
 
@@ -139,6 +151,12 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
         Log.d("mystring",""+finalString);
     }
 
+    public void noAnswers(){
+
+        uploadtext.setText("Ingen spørgsmål at vise");
+
+    }
+
 
     @Override
     public void onClick(View v) {
@@ -151,7 +169,7 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
 
         if (v == regret){
 
-            Intent i = new Intent(UploadAnswers.this,MainUserActivity.class);
+            Intent i = new Intent(UploadAnswers.this,InterpreterActivity.class);
             startActivity(i);
 
         }

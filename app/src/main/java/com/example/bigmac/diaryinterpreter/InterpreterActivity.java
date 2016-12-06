@@ -1,10 +1,8 @@
 package com.example.bigmac.diaryinterpreter;
 
 
-import android.app.ProgressDialog;
+
 import android.content.Intent;
-import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -16,22 +14,6 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
-
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 
 
@@ -62,7 +44,7 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
     private int i = 0;
 
 
-    private ArrayList<JsonHolder> result = null;
+    private ArrayList<JsonHolder> result = new ArrayList<>();
     private ArrayList<String> answers = new ArrayList<>();
     private ArrayList<String> exstraAnswersArray = new ArrayList<>();
 
@@ -83,7 +65,16 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
             fname = PersonInfo.getFirstName();
             id = PersonInfo.getDiaryID();
 
-        result = PersonInfo.getQuestionsArray();
+        //HERE WE SHOULD GET ONLY QUESTION WITH THE QUESTIONGRP ID
+        for (int c = 0;c<PersonInfo.getQuestionsArray().size();c++){
+            if (PersonInfo.getQuestionsArray().get(c).getQuestionGrp()==PersonInfo.getQuestionGrp()){
+
+                Log.d("C's indhold", "" + PersonInfo.getQuestionsArray().get(c));
+                result.add(PersonInfo.getQuestionsArray().get(c));
+
+            }
+        }
+        Log.d("mit array",""+result);
         typeHandler();
 
     }

@@ -11,6 +11,7 @@ import java.util.ArrayList;
     static String lastname = null;
     static String diaryID = null;
     static String userID = null;
+    static int questionGrp;
     static ArrayList<JsonHolder> allquestions = null;
     static ArrayList<EventHolder> allevents = null;
 
@@ -27,6 +28,7 @@ import java.util.ArrayList;
     }
 
     public static void setUserID(String userID){
+
         PersonInfo.userID = userID;
     }
 
@@ -44,6 +46,12 @@ import java.util.ArrayList;
     public static void setAllevents(ArrayList<EventHolder> allevents){
 
         PersonInfo.allevents = allevents;
+    }
+
+    public static void setQuestionGrp(int questionGrp){
+
+        PersonInfo.questionGrp = questionGrp;
+
     }
 
 
@@ -79,5 +87,9 @@ import java.util.ArrayList;
         return allevents;
     }
 
+    public static int getQuestionGrp(){
+
+        return questionGrp;
+    }
 
 }

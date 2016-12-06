@@ -35,7 +35,6 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     // CONNECTION_TIMEOUT and READ_TIMEOUT are in milliseconds
-
     public static final int CONNECTION_TIMEOUT = 10000;
     public static final int READ_TIMEOUT = 15000;
     private EditText etPassword,etPassword1,etPassword2,etPassword3;
@@ -238,6 +237,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
 
         if (v==userBtn){
+            pref.edit().clear().commit();
             int changecase = 0;
             alerMethod(changecase);
 

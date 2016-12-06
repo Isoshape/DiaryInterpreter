@@ -16,7 +16,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/primQuizLayout"
         android:orientation="vertical"
-        android:layout_weight="1"
+        android:layout_weight="0.5"
         android:gravity="center_horizontal">
 
      <TextView
@@ -31,11 +31,17 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Gå til dagbog"
+            android:layout_marginBottom="50dp"
             android:id="@+id/InterpreterBtn"/>
 
-
-
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Dine mulige hændelser"
+            android:gravity="center_horizontal"/>
     </LinearLayout>
+
+
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -43,13 +49,39 @@
         android:id="@+id/eventsLayout"
         android:paddingTop="10dp"
         android:layout_weight="2"
-        android:gravity="center_horizontal"
-        android:orientation="vertical">
+        android:orientation="horizontal">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+            android:gravity="center_horizontal"
+        android:layout_weight="1"
+        android:id="@+id/timeEvents">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tidshændelser"
+                android:gravity="center_horizontal"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Dine mulige hændelser"/>
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:layout_weight="1"
+            android:id="@+id/normalEvents">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Almindelige hændelser"
+                android:gravity="center_horizontal"/>
+
+        </LinearLayout>
 
 
     </LinearLayout>

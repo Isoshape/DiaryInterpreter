@@ -4,6 +4,8 @@ import java.io.Serializable;
 
 public class JsonHolder implements Serializable {
 
+    private int questionGrp;
+
     private int id;
 
     private int type;
@@ -19,9 +21,9 @@ public class JsonHolder implements Serializable {
     private String[] extraAnswers;
 
 
-    public JsonHolder(String question, String answers, String extraID, String extraQuestions, String extraAnswers, int type) {
+    public JsonHolder(int questionGrp,String question, String answers, String extraID, String extraQuestions, String extraAnswers, int type) {
 
-
+        this.questionGrp = questionGrp;
         this.question = question;
         splitanswers = answers.split(",");
 
@@ -30,6 +32,11 @@ public class JsonHolder implements Serializable {
         this.extraAnswers = extraAnswers.split(",");
         this.type = type;
 
+    }
+
+    public int getQuestionGrp(){
+
+        return questionGrp;
     }
 
     public int getId() {
