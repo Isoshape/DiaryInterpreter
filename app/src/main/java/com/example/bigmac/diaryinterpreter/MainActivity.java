@@ -386,8 +386,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             //this method will be running on UI thread
             String[] values;
-            String firstname=null;
-            String dbid=null;
+            String firstname;
+            String uuid;
+            String diaryID;
+
 
             pdLoading.dismiss();
 
@@ -400,12 +402,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 values = result.split(" ");
                 firstname = values[0];
-                dbid = values[1];
+                uuid = values[1];
+                diaryID = values[2];
 
                 PersonInfo.setFirstName(firstname);
-                PersonInfo.setDiaryID(dbid);
+                PersonInfo.setUserID(uuid);
+                PersonInfo.setDiaryID(diaryID);
 
-                Toast.makeText(MainActivity.this, "Velkommen! "+firstname+" Dit id er :"+dbid, Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Velkommen! "+firstname+" Dit id er :"+uuid +" "+diaryID, Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(MainActivity.this,MainUserActivity.class);
                 startActivity(intent);
                 MainActivity.this.finish();

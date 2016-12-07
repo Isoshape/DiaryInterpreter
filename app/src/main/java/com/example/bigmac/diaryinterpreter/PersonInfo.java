@@ -12,6 +12,7 @@ import java.util.ArrayList;
     static String diaryID = null;
     static String userID = null;
     static int questionGrp;
+    static int trigger;
     static ArrayList<JsonHolder> allquestions = null;
     static ArrayList<EventHolder> allevents = null;
 
@@ -19,6 +20,11 @@ import java.util.ArrayList;
 
         PersonInfo.firstname = firstname;
 
+    }
+
+    public static void setTrigger(int trigger){
+
+        PersonInfo.trigger = trigger;
     }
 
     public static void setLastName(String lastname){
@@ -91,5 +97,12 @@ import java.util.ArrayList;
 
         return questionGrp;
     }
+
+    public static int getTrigger(){
+
+        return trigger;
+    }
+
+
 
 }

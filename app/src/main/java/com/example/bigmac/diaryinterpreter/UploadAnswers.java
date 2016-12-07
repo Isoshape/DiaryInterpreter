@@ -2,6 +2,7 @@ package com.example.bigmac.diaryinterpreter;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -24,16 +25,25 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class UploadAnswers extends AppCompatActivity implements View.OnClickListener {
 
-    private Button upload;
+    //sharedpreferences
+    SharedPreferences pref;
+    SharedPreferences.Editor editor;
+
+    private Button confirmUpload;
     private Button regret;
+    private Button confirmAnswers;
 
     private TextView uploadtext;
 
     LinearLayout ll;
+    LinearLayout buttonholder;
+
     private ArrayList<String> answers;
     private ArrayList<String> extraanswers;
     private ArrayList<JsonHolder> questions;
@@ -45,16 +55,13 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_upload_answers);
 
-        upload = (Button) findViewById(R.id.uploadButton);
-        upload.setOnClickListener(this);
-
-        regret = (Button) findViewById(R.id.regretBtn);
-        regret.setOnClickListener(this);
+        pref = getApplicationContext().getSharedPreferences("MyPref", 0);
+        editor = pref.edit();
 
         uploadtext = (TextView) findViewById(R.id.uploadText);
-        //PROGRAMMATICALLY SET UP LAYOUT IFT. EVENTYPE / IS IS TIME QUESTIONS OR JUST REGULAR QUESTIONS.
 
         ll = (LinearLayout) findViewById(R.id.uploadlinear);
+        buttonholder = (LinearLayout) findViewById(R.id.uploadBtnsHolder);
 
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
@@ -64,7 +71,8 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
             questions = (ArrayList<JsonHolder>) getIntent().getSerializableExtra("questionArray");
 
             if (questions.size()>0) {
-                showAnswers();
+                showAnswersNormal();
+                createButtons();
             }
 
             //If the other activity passed an empty question array this means no question is avalible
@@ -77,8 +85,41 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
 
     }
 
+    public void createButtons(){
 
-    public void showAnswers(){
+        buttonholder.removeAllViews();
+
+        switch (PersonInfo.getTrigger()){
+
+            case 0:
+                confirmUpload = new Button(this);
+                confirmUpload.setText("Bekræft og upload");
+                confirmUpload.setOnClickListener(this);
+                regret = new Button(this);
+                regret.setText("Start forfra");
+                regret.setOnClickListener(this);
+                buttonholder.addView(confirmUpload);
+                buttonholder.addView(regret);
+                break;
+
+            case 1:
+                regret = new Button(this);
+                regret.setText("Start forfra");
+                regret.setOnClickListener(this);
+                confirmAnswers = new Button(this);
+                confirmAnswers.setText("Bekræft svar");
+                confirmAnswers.setOnClickListener(this);
+                buttonholder.addView(regret);
+                buttonholder.addView(confirmAnswers);
+                break;
+        }
+
+
+
+    }
+
+
+    public void showAnswersNormal(){
         //used for EQ iterator
         int aa =0;
         // String[] questionssplit = questions.get(1).getAnswers();
@@ -161,15 +202,30 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
     @Override
     public void onClick(View v) {
         //hardcoded right now, shall be transfered from prev activity
-        String userid = "10";
-        String diaryid="1944";
-        if (v == upload){
+        String userid = PersonInfo.getUserID();
+        String diaryid= PersonInfo.getDiaryID();
+        //Create this date - same format as SQL
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String currentDateandTime = sdf.format(new Date());
+        //This is not a time event, therefor set time to 0
+        String time = "00:00:00";
+        //Get eventID meaning who belongs these question to. 0 = always original diary
+        int eventID = PersonInfo.getQuestionGrp();
+
+        if (v == confirmUpload){
             new AysncUpload().execute(finalString,userid,diaryid);
         }
 
         if (v == regret){
-
             Intent i = new Intent(UploadAnswers.this,InterpreterActivity.class);
+            startActivity(i);
+        }
+
+        if (v==confirmAnswers){
+            Toast.makeText(UploadAnswers.this, "Husk at slå knappen fra når hændelsen er færdig", Toast.LENGTH_LONG).show();
+            Intent i = new Intent(UploadAnswers.this,MainUserActivity.class);
+            editor.putString("answers"+PersonInfo.getQuestionGrp(),finalString);
+            editor.commit();
             startActivity(i);
 
         }

@@ -68,6 +68,9 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_user);
 
+//        PersonInfo.setFirstName("Nichlas");
+//        PersonInfo.setDiaryID("1");
+
         //pref with private mode = 0 (the created file can only be accessed by the calling application)
         pref = getApplicationContext().getSharedPreferences("MyPref", 0);
         editor = pref.edit();
@@ -203,11 +206,10 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
             String[] eventInfo = universalbutton.getTag().toString().split(",");
             String eventType = eventInfo[0];
             String eventID = eventInfo[1];
-
+            PersonInfo.setTrigger(0);
+                Log.d("Trigger is now ", "" + PersonInfo.getTrigger());
                 Log.d("Event  ",""+eventType);
                 Log.d("ID",""+eventID);
-
-
 
         }
     };
@@ -231,13 +233,17 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
                 //Sets which questions belongs to this event (questionGrp)
                 PersonInfo.setQuestionGrp(Integer.parseInt(eventID));
-
+                //TRIGGER ID IS WHAT KIND OF EVENT THIS IS WHEN IN UPLOADANSWERS ACTIVITY.
+                //IF TIME EVENT WE DONT WANT TO UPLOAD ANSWERS BEFORE TIME SWITCH IS OFF, THEREFOR DIFFERENT HANDLING IS REQUIRED
+                PersonInfo.setTrigger(1);
+                //Set the eventID
                 long startTime = System.currentTimeMillis();
                 //Saving the state of the switch, for when returning to the activity
                 editor.putBoolean("switchState" + eventID, true);
                 //saving the timestart value
                 editor.putLong("starttime"+eventID,+System.currentTimeMillis());
                 editor.commit();
+                Log.d("Trigger is now ", "" + PersonInfo.getTrigger());
                 activateIntepreter();
 
             }
@@ -248,6 +254,8 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
                 //saving the timeend value
                 editor.putLong("endtime" + eventID, +System.currentTimeMillis());
                 editor.commit();
+                String svar = pref.getString("answers"+PersonInfo.getQuestionGrp(),null);
+                Log.d("Svare fra tidligere var",""+svar);
                 eventEnded(eventID);
 
             }
@@ -281,6 +289,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
         if (v==launchInterpreterBtn){
 
             //The diary always have questionGrp = 0;
+            PersonInfo.setTrigger(0);
             PersonInfo.setQuestionGrp(0);
             activateIntepreter();
 

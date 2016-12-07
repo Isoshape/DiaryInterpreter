@@ -26,7 +26,6 @@ public class JsonHolder implements Serializable {
         this.questionGrp = questionGrp;
         this.question = question;
         splitanswers = answers.split(",");
-
         this.extraID = extraID;
         this.extraQuestion = extraQuestions;
         this.extraAnswers = extraAnswers.split(",");
