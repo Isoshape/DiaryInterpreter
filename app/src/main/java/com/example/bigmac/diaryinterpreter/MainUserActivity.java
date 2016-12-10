@@ -124,7 +124,6 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
                 switchTag.setOnClickListener(switchHandler);
                 //when creating the button, get the switch state if it was previously set, if not set to false
                 switchTag.setChecked(pref.getBoolean("switchState"+allEvents.get(j).getEventID(),false));
-                //switchTag.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener());
                 timeEventsHolder.addView(switchTag);
 
             }
@@ -151,17 +150,19 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
 
                 JSONObject jsonProductObject = jsonArrayQuestions.getJSONObject(i);
+                int questionID = jsonProductObject.getInt("questionID");
+                int visible = jsonProductObject.getInt("visible");
+                int operation = jsonProductObject.getInt("operation");
+                int qcondition = jsonProductObject.getInt("qcondition");
                 int questionGrp = jsonProductObject.getInt("questionGrp");
+                int type = jsonProductObject.getInt("type");
                 String question = jsonProductObject.getString("question");
-                String answers = jsonProductObject.getString("answers");
-                String extraID = jsonProductObject.getString("extraTrigger");
-                String extraQuestion = jsonProductObject.getString("extraQuestion");
-                String  extraAnswers = jsonProductObject.getString("extraAnswers");
-                int type = jsonProductObject.getInt("questionType");
-                allquestions.add(new JsonHolder(questionGrp,question, answers, extraID, extraQuestion, extraAnswers, type));
+                String possibleAnswer = jsonProductObject.getString("possibleAnswer");
+               allquestions.add(new JsonHolder(questionID,visible,operation,qcondition,questionGrp,type,question,possibleAnswer));
             }
 
             Log.d("ArrayQuestions",""+jsonArrayQuestions);
+
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -170,7 +171,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
         PersonInfo.setAllquestions(allquestions);
 
     }
-    //Methode for parsin Json Array with evens
+    //Methode for parsin Json Array with events
     public void parseJsonEvents(){
 
         JSONArray jsonArrayEvents;
@@ -350,11 +351,11 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
     public String getQuestions(){
 
-
+    Log.d("getquestion","jeg er aktiveret");
         try {
 
             // Enter URL address where your php file resides
-            url = new URL("http://hadsundmotion.dk/questions.php");
+            url = new URL("http://10.0.2.2/questions.php");
 
         } catch (MalformedURLException e) {
             // TODO Auto-generated catch block
@@ -375,7 +376,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
             // Append parameter ID to URL
             Uri.Builder builder = new Uri.Builder()
-                    .appendQueryParameter("id", PersonInfo.getDiaryID());
+                    .appendQueryParameter("diaryid", ""+PersonInfo.getDiaryID());
             String query = builder.build().getEncodedQuery();
 
             // Open connection for sending data
@@ -402,7 +403,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
             // Check if successful connection made
             if (response_code == HttpURLConnection.HTTP_OK) {
 
-                Log.d("connection", "forbindelse etableret");
+                Log.d("connection1", "forbindelse etableret1");
 
                 // Read data sent from server
                 InputStream input = conn.getInputStream();
@@ -449,7 +450,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
         try {
 
             // Enter URL address where your php file resides
-            url = new URL("http://hadsundmotion.dk/events.php");
+            url = new URL("http://10.0.2.2/events.php");
 
         } catch (MalformedURLException e) {
             // TODO Auto-generated catch block
@@ -470,7 +471,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
             // Append parameter ID to URL
             Uri.Builder builder = new Uri.Builder()
-                    .appendQueryParameter("id", PersonInfo.getDiaryID());
+                    .appendQueryParameter("diaryid", ""+PersonInfo.getDiaryID());
             String query = builder.build().getEncodedQuery();
 
             // Open connection for sending data

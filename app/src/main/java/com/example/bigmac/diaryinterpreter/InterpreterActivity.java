@@ -14,8 +14,10 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
-import java.util.ArrayList;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 
 
 public class InterpreterActivity extends AppCompatActivity implements View.OnClickListener {
@@ -29,19 +31,33 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
     RadioGroup rg;
     EditText etAnswer;
 
-
+    private String activator = "next";
 
     private TextView questionfield;
     private Button nextButton;
     private Button prevButton;
     String fname;
-    String id;
+    int id;
+
+    //dB fields;
+    DBHandler db;
 
 
-    int flagExtra = 1;
+    //data info
+    String currentDateandTime;
+    String time;
+
+    //which session are we in
+    int session;
+
 
     //Main iteration variable.
     private int i = 0;
+
+
+    //USE AF FREAKING SESSION NUMBER!! EVERYTIME DIARY IS OPENED ITERATOE THE SESSION
+    //THIS WAY YOU CAN ALWAYS FIND THE NEWEST ONE!
+    // PROBLEM B: HANDLE IF QID ISNT IN THE DB.
 
 
     private ArrayList<JsonHolder> result = new ArrayList<>();
@@ -53,6 +69,15 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_success);
 
+        db = new DBHandler(this);
+
+        //create date
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        currentDateandTime = sdf.format(new Date());
+        time = "00:00:00";
+
+        session = db.getSession()+1;
+        Log.d("Hva er session",""+session);
 
         answersHold = (LinearLayout) findViewById(R.id.answerHolder);
         questionfield = (TextView) findViewById(R.id.main_title_textView);
@@ -66,26 +91,26 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
             id = PersonInfo.getDiaryID();
 
         //HERE WE SHOULD GET ONLY QUESTION WITH THE QUESTIONGRP ID
-        for (int c = 0;c<PersonInfo.getQuestionsArray().size();c++){
-            if (PersonInfo.getQuestionsArray().get(c).getQuestionGrp()==PersonInfo.getQuestionGrp()){
+            for (int c = 0;c<PersonInfo.getQuestionsArray().size();c++){
 
+            if (PersonInfo.getQuestionsArray().get(c).getQuestionGrp()==PersonInfo.getQuestionGrp()){
                 Log.d("C's indhold", "" + PersonInfo.getQuestionsArray().get(c));
                 result.add(PersonInfo.getQuestionsArray().get(c));
-
             }
         }
-        Log.d("mit array",""+result);
+
+        Log.d("mit array", "" + result);
         typeHandler();
 
     }
-
     @Override
     public void onClick(View v) {
 
-
         if (v == nextButton) {
+
             //make sure to reset view
             answersHold.removeAllViews();
+            activator="next";
 
             //implement the different modules here
             // case 1 = multiple choice
@@ -98,86 +123,161 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
                 case 2:
                     handleUserInput();
                     break;
-            }
 
-            Log.d("MA", "" + answers);
-            Log.d("EA", "" + exstraAnswersArray);
+
+            }
         }
 
-        if (v == prevButton){
-            answersHold.removeAllViews();
-            if (i>0) {
-                // Default, iterate i down and remove from both arrays
-                i--;
-                answers.remove(i);
-                if (Integer.parseInt(result.get(i).getExtraID()) > -1) {
-                    exstraAnswersArray.remove(i);
+            if (v == prevButton) {
 
-                }
 
-                switch (result.get(i).getType()) {
-                    case 1:
-                        handleMultipleChoice();
-                        break;
-                    case 2:
-                        handleUserInput();
-                        break;
-                }
+               if (i>0) {
+                   activator="prev";
+                   typeHandler();
+                   db.deleteLast();
+
+               }
+                else {
+                     Toast.makeText(InterpreterActivity.this, "Du er ved første spørgsmål ", Toast.LENGTH_LONG).show();
+               }
+
             }
-
-            //if inside extraQuestion and i = 0 more handling is required
-            if (flagExtra==2){
-                answers.remove(i);
-                flagExtra = 1;
-                switch (result.get(i).getType()) {
-                    case 1:
-                        handleMultipleChoice();
-                        break;
-                    case 2:
-                        handleUserInput();
-                        break;
-                }
-            }
-
-            //if i = 0 nothing should happen when back button is pressed.
-            else if (i==0) {
-                switch (result.get(i).getType()) {
-                    case 1:
-                        handleMultipleChoice();
-                        break;
-                    case 2:
-                        handleUserInput();
-                        break;
-                }
-            }
-
-            Log.d("MA", "" + answers);
-            Log.d("EA", "" + exstraAnswersArray);
-
-        }
 
     }
+
+
+//        if (v == nextButton) {
+//            //make sure to reset view
+//            answersHold.removeAllViews();
+//
+//            //implement the different modules here
+//            // case 1 = multiple choice
+//            // case 2 = user input
+//            // case 3 = upcomming next patch!
+//            switch (result.get(i).getType()) {
+//                case 1:
+//                    handleMultipleChoice();
+//                    break;
+//                case 2:
+//                    handleUserInput();
+//                    break;
+//            }
+//
+//            Log.d("MA", "" + answers);
+//            Log.d("EA", "" + exstraAnswersArray);
+//        }
+//
+//        if (v == prevButton){
+//            answersHold.removeAllViews();
+//            if (i>0) {
+//                // Default, iterate i down and remove from both arrays
+//                i--;
+////                answers.remove(i);
+////                if (Integer.parseInt(result.get(i).getExtraID()) > -1) {
+////                    exstraAnswersArray.remove(i);
+////
+////                }
+//
+//                switch (result.get(i).getType()) {
+//                    case 1:
+//                        handleMultipleChoice();
+//                        break;
+//                    case 2:
+//                        handleUserInput();
+//                        break;
+//                }
+//            }
+//
+//            //if inside extraQuestion and i = 0 more handling is required
+//            if (flagExtra==2){
+//                answers.remove(i);
+//                flagExtra = 1;
+//                switch (result.get(i).getType()) {
+//                    case 1:
+//                        handleMultipleChoice();
+//                        break;
+//                    case 2:
+//                        handleUserInput();
+//                        break;
+//                }
+//            }
+//
+//            //if i = 0 nothing should happen when back button is pressed.
+//            else if (i==0) {
+//                switch (result.get(i).getType()) {
+//                    case 1:
+//                        handleMultipleChoice();
+//                        break;
+//                    case 2:
+//                        handleUserInput();
+//                        break;
+//                }
+//            }
+//
+//            Log.d("MA", "" + answers);
+//            Log.d("EA", "" + exstraAnswersArray);
+//
+//        }
+
+   // }
 
     public void typeHandler(){
 
         //TYPEHANDLER() is responsible for activating the correct layout
-
         //MÅ IKKE KALDES HVIS I ER STØRRE END INDEX,
         if (i < result.size()) {
             Log.d("1. i= ", "" + i);
             answersHold.removeAllViews();
 
-            //Case 1 - MultipleChoice
-            if (result.get(i).getType() == 1) {
-                setLayoutMultiple();
-            }//end Case 1
+            if (activator.equalsIgnoreCase("next")) {
+                //check if answer is dependent on previous answer
+                if (result.get(i).getVisible() == 1) {
+                    //check which question it operates on
+                    int master = result.get(i).getOperation();
+                    Log.d("master er ", "" + master);
+                    //compare this question condition with the master if true show this question
+                    if (db.getAnswer(master) == result.get(i).getQcondition()) {
+                        Log.d("forrige svar var ", "" + db.getAnswer(master));
+                        Log.d("Spørgsmålet skal vises", "hurra");
+                        layoutActivator();
+                    }
 
-            //Case 2 - User input
-            if (result.get(i).getType() == 2) {
+                    //if condition is not true skip this question and iterate i.
+                    else {
+                        i++;
+                        typeHandler();
+                    }
+                } else {
 
-                setLayoutUserInput();
-            }// end Case 2
+                    layoutActivator();
+                }
+            }
+
+            if (activator.equalsIgnoreCase("prev")) {
+                //check if answer is dependent on previous answer
+                i--;
+                if (result.get(i).getVisible() == 1) {
+                    //check which question it operates on
+                    int master = result.get(i).getOperation();
+                    Log.d("master er ", "" + master);
+                    //compare this question condition with the master if true show this question
+                    if (db.getAnswer(master) == result.get(i).getQcondition()) {
+                        Log.d("forrige svar var ", "" + db.getAnswer(master));
+                        Log.d("Spørgsmålet skal vises", "hurra");
+                        layoutActivator();
+                    }
+
+                    //if condition is not true skip this question and iterate i.
+                    else {
+                        typeHandler();
+                    }
+                } else {
+                    layoutActivator();
+                }
+            }
+
         }
+
         //this makes sure that the last data is saved, and no more layouts are being called - only next activity.
         else if (i == result.size()){
             Log.d("Arrayslut",""+i);
@@ -190,71 +290,59 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
 
     }
 
+    public void layoutActivator(){
+
+        //Case 1 - MultipleChoice
+        if (result.get(i).getType() == 1) {
+            setLayoutMultiple();
+        }//end Case 1
+
+        //Case 2 - User input
+        if (result.get(i).getType() == 2) {
+           // setLayoutUserInput();
+        }// end Case 2
+    }
+
+
+
+
+
 // !! MULTLTIPLE CHOICE MODULE !! //
     public void handleMultipleChoice(){
-
-        Log.d("handleMulti",""+i);
 
         //Check if view has been created or not. If this is the first time, view is null and needs to be created
         if (rg==null) {
             typeHandler();
-
         }
-        String rG1_CheckId = ""+rg.getCheckedRadioButtonId();
+        String rG1_CheckId = ""+ rg.getCheckedRadioButtonId();
         Log.d("radiobuttonn", "" + rG1_CheckId);
         rg.clearCheck();
         //check if array holding jsonObjects is out of bounds
         //check if an answer is selected, if true proceed
         if (Integer.parseInt(rG1_CheckId) > -1) {
 
-            //check if extra answer is missed/not activated in case of this save the value as -1 into xtraanswerArray (meaning this questions is not answered/activated)
-            if (Integer.parseInt(result.get(i).getExtraID()) > -1 && Integer.parseInt(rG1_CheckId) != Integer.parseInt(result.get(i).getExtraID()) && flagExtra == 1) {
-                exstraAnswersArray.add("-1");
-            }
 
-            //Check if extra answers is activated (if its possible) flagextra is set to 2 (in the statement) everytime methode is called, to not enter it again until left for main question
-            if (Integer.parseInt(rG1_CheckId) == Integer.parseInt(result.get(i).getExtraID()) && flagExtra == 1) {
-
-                answers.add(rG1_CheckId);
-                showExtraQuestion();
-                //set flag=2 in order to get selected extra answer in extraanswerarray
-                flagExtra = 2;
-
-            }
-            //Check to see if extra an
-            // swers is active, if so save selected value in extraanswersArrat, and go back to flagvalue=1 - default
-            else if (flagExtra == 2) {
-
-                exstraAnswersArray.add(rG1_CheckId);
-                flagExtra = 1;
-
-                i++;
-                typeHandler();
-
-            }
-            //Default, no extra answers possible.
-            else {
-                answers.add(rG1_CheckId);
-                flagExtra = 1;
-                    i++;
-                typeHandler();
-
-            }
-        }   if (Integer.parseInt(rG1_CheckId) == -1) {
-            Toast.makeText(InterpreterActivity.this, "Vælg venligst et svar ", Toast.LENGTH_SHORT).show();
+            db.addAnswer(new Answers(result.get(i).getQuestionID(),PersonInfo.getDiaryID(),PersonInfo.getUserID(),rG1_CheckId,PersonInfo.getQuestionGrp(),currentDateandTime,time,session));
+            db.close();
+            i++;
             typeHandler();
+
+        }
+        else {
+            typeHandler();
+            Toast.makeText(InterpreterActivity.this, "Vælg venligst et svar ", Toast.LENGTH_LONG).show();
+
         }
 
     }
     public void setLayoutMultiple(){
 
-        rg = new RadioGroup(getApplicationContext()); //create the RadioGroup
-        rg.setOrientation(RadioGroup.VERTICAL);
-        rg.removeAllViews();
-        if (i<result.size()) {
+            rg = new RadioGroup(getApplicationContext()); //create the RadioGroup
+            rg.setOrientation(RadioGroup.VERTICAL);
+            rg.removeAllViews();
+            if (i<result.size()) {
 
             String getquestion = result.get(i).getQuestion();
-
 
             //Get question from arraylist
             questionfield.setText(""+(i+1)+" / "+result.size()+ " " + getquestion);
@@ -268,8 +356,6 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
                // newRadioButton.setTextColor(Color.parseColor("#03fe6d"));
                 newRadioButton.setText("" + questionssplit[a]);
                 newRadioButton.setId(a);
-
-
                 rg.addView(newRadioButton, a);
 
             }//end for
@@ -285,27 +371,6 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
         }
     }
 
-
-    public void showExtraQuestion(){
-        rg.removeAllViews();
-        String getextraquestion = result.get(i).getExtraQuestion();
-        questionfield.setText(""+getextraquestion);
-       // get possible answers in insert them in an string array
-        String[] extraquestionssplit = result.get(i).getExtraAnswers();
-        int a = 0;
-        for (; a < extraquestionssplit.length; a++) {
-            //create radiobuttons equal to size of possible answers, string array
-            RadioButton newRadioButton = new RadioButton(InterpreterActivity.this);
-            // newRadioButton.setTextColor(Color.parseColor("#03fe6d"));
-            newRadioButton.setText("" + extraquestionssplit[a]);
-            newRadioButton.setId(a);
-
-            rg.addView(newRadioButton, a);
-
-        }
-        answersHold.addView(rg);
-
-    }
     // !! MULTLTIPLE CHOICE MODULE FINISH !! //
 
 
@@ -337,25 +402,25 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
         }
 
     }
-    public void setLayoutUserInput(){
-
-        String getquestion = result.get(i).getQuestion();
-        questionfield.setText(getquestion);
-
-        etAnswer = new EditText(this);
-        etAnswer.setBackgroundResource(R.drawable.roundedbutton);
-        etAnswer.setWidth(30);
-
-        answersHold.addView(etAnswer);
-    }
-    // !! USER INPUT MODULE FINISH !! //
-
-
-
-    @Override
-    public void onBackPressed() {
-        //disable back button
-    }
+//    public void setLayoutUserInput(){
+//
+//        String getquestion = result.get(i).getQuestion();
+//        questionfield.setText(getquestion);
+//
+//        etAnswer = new EditText(this);
+//        etAnswer.setBackgroundResource(R.drawable.roundedbutton);
+//        etAnswer.setWidth(30);
+//
+//        answersHold.addView(etAnswer);
+//    }
+//    // !! USER INPUT MODULE FINISH !! //
+//
+//
+//
+//    @Override
+//    public void onBackPressed() {
+//        //disable back button
+//    }
 
 
 }

@@ -9,8 +9,8 @@ import java.util.ArrayList;
 
     static String firstname = null;
     static String lastname = null;
-    static String diaryID = null;
-    static String userID = null;
+    static int diaryID;
+    static int userID;
     static int questionGrp;
     static int trigger;
     static ArrayList<JsonHolder> allquestions = null;
@@ -33,12 +33,12 @@ import java.util.ArrayList;
 
     }
 
-    public static void setUserID(String userID){
+    public static void setUserID(int userID){
 
         PersonInfo.userID = userID;
     }
 
-    public static void setDiaryID(String diaryID){
+    public static void setDiaryID(int diaryID){
 
         PersonInfo.diaryID = diaryID;
 
@@ -73,13 +73,13 @@ import java.util.ArrayList;
 
     }
 
-    public static String getDiaryID(){
+    public static int getDiaryID(){
 
         return diaryID;
 
     }
 
-    public static String getUserID(){
+    public static int getUserID(){
         return userID;
     }
 

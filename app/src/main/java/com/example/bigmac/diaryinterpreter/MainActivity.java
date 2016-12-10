@@ -305,7 +305,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             try {
 
                 // Enter URL address where your php file resides
-                url = new URL("http://hadsundmotion.dk/login.inc.php");
+
+                url = new URL("http://10.0.2.2/login.inc.php");
 
             } catch (MalformedURLException e) {
                 // TODO Auto-generated catch block
@@ -387,8 +388,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             //this method will be running on UI thread
             String[] values;
             String firstname;
-            String uuid;
-            String diaryID;
+            int uuid;
+            int diaryID;
 
 
             pdLoading.dismiss();
@@ -402,8 +403,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 values = result.split(" ");
                 firstname = values[0];
-                uuid = values[1];
-                diaryID = values[2];
+                uuid = Integer.parseInt(values[1]);
+                diaryID = Integer.parseInt(values[2]);
 
                 PersonInfo.setFirstName(firstname);
                 PersonInfo.setUserID(uuid);

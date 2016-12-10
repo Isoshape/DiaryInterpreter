@@ -4,9 +4,12 @@ import java.io.Serializable;
 
 public class JsonHolder implements Serializable {
 
-    private int questionGrp;
+    private int questionID;
+    private int visible;
+    private int operation;
+    private int qcondition;
 
-    private int id;
+    private int questionGrp;
 
     private int type;
 
@@ -14,21 +17,17 @@ public class JsonHolder implements Serializable {
 
     private String[] splitanswers;
 
-    private String extraID;
 
-    private String extraQuestion;
+    public JsonHolder(int questionID,int visible,int operation,int qcondition,int questionGrp,int type,String question, String answers) {
 
-    private String[] extraAnswers;
-
-
-    public JsonHolder(int questionGrp,String question, String answers, String extraID, String extraQuestions, String extraAnswers, int type) {
-
+        this.questionID=questionID;
+        this.visible=visible;
+        this.operation=operation;
+        this.qcondition = qcondition;
+        this.questionID=questionID;
         this.questionGrp = questionGrp;
         this.question = question;
         splitanswers = answers.split(",");
-        this.extraID = extraID;
-        this.extraQuestion = extraQuestions;
-        this.extraAnswers = extraAnswers.split(",");
         this.type = type;
 
     }
@@ -38,22 +37,12 @@ public class JsonHolder implements Serializable {
         return questionGrp;
     }
 
-    public int getId() {
-
-        return id;
-
-    }
 
     public int getType(){
 
         return type;
     }
 
-    public void setId(int id) {
-
-        this.id = id;
-
-    }
 
     public String getQuestion() {
 
@@ -68,24 +57,25 @@ public class JsonHolder implements Serializable {
 
     }
 
-    public String getExtraQuestion() {
+    public int getQuestionID(){
 
-        return extraQuestion;
-
+        return questionID;
     }
 
-    public String[] getExtraAnswers() {
+    public int getVisible(){
 
-
-        return extraAnswers;
-
+        return visible;
     }
 
-    public String getExtraID(){
+    public int getOperation(){
 
-        return extraID;
+        return operation;
     }
 
+    public int getQcondition(){
+
+        return qcondition;
+    }
 
 
 }
