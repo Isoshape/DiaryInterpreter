@@ -22,10 +22,6 @@ import java.util.Date;
 
 public class InterpreterActivity extends AppCompatActivity implements View.OnClickListener {
 
-    public static final int CONNECTION_TIMEOUT = 10000;
-    public static final int READ_TIMEOUT = 15000;
-    //private RadioGroup radioGroup;
-
     //different dynamic views
     LinearLayout answersHold;
     RadioGroup rg;
@@ -36,8 +32,7 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
     private TextView questionfield;
     private Button nextButton;
     private Button prevButton;
-    String fname;
-    int id;
+
 
     //dB fields;
     DBHandler db;
@@ -55,42 +50,39 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
     private int i = 0;
 
 
-    //USE AF FREAKING SESSION NUMBER!! EVERYTIME DIARY IS OPENED ITERATOE THE SESSION
-    //THIS WAY YOU CAN ALWAYS FIND THE NEWEST ONE!
-    // PROBLEM B: HANDLE IF QID ISNT IN THE DB.
-
 
     private ArrayList<JsonHolder> result = new ArrayList<>();
-    private ArrayList<String> answers = new ArrayList<>();
-    private ArrayList<String> exstraAnswersArray = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_success);
 
+        //Create database object and get session
         db = new DBHandler(this);
+
+
+
+        session = db.getSession()+1;
+        Log.d("Hva er session",""+session);
 
         //create date
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         currentDateandTime = sdf.format(new Date());
         time = "00:00:00";
 
-        session = db.getSession()+1;
-        Log.d("Hva er session",""+session);
 
+        //Layout
         answersHold = (LinearLayout) findViewById(R.id.answerHolder);
         questionfield = (TextView) findViewById(R.id.main_title_textView);
         nextButton = (Button) findViewById(R.id.nextquiz);
         nextButton.setOnClickListener(this);
-
         prevButton = (Button) findViewById(R.id.prevquiz);
         prevButton.setOnClickListener(this);
 
-            fname = PersonInfo.getFirstName();
-            id = PersonInfo.getDiaryID();
 
-        //HERE WE SHOULD GET ONLY QUESTION WITH THE QUESTIONGRP ID
+
+            //HERE WE SHOULD GET ONLY QUESTION WITH THE QUESTIONGRP ID
             for (int c = 0;c<PersonInfo.getQuestionsArray().size();c++){
 
             if (PersonInfo.getQuestionsArray().get(c).getQuestionGrp()==PersonInfo.getQuestionGrp()){
@@ -146,81 +138,6 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
     }
 
 
-//        if (v == nextButton) {
-//            //make sure to reset view
-//            answersHold.removeAllViews();
-//
-//            //implement the different modules here
-//            // case 1 = multiple choice
-//            // case 2 = user input
-//            // case 3 = upcomming next patch!
-//            switch (result.get(i).getType()) {
-//                case 1:
-//                    handleMultipleChoice();
-//                    break;
-//                case 2:
-//                    handleUserInput();
-//                    break;
-//            }
-//
-//            Log.d("MA", "" + answers);
-//            Log.d("EA", "" + exstraAnswersArray);
-//        }
-//
-//        if (v == prevButton){
-//            answersHold.removeAllViews();
-//            if (i>0) {
-//                // Default, iterate i down and remove from both arrays
-//                i--;
-////                answers.remove(i);
-////                if (Integer.parseInt(result.get(i).getExtraID()) > -1) {
-////                    exstraAnswersArray.remove(i);
-////
-////                }
-//
-//                switch (result.get(i).getType()) {
-//                    case 1:
-//                        handleMultipleChoice();
-//                        break;
-//                    case 2:
-//                        handleUserInput();
-//                        break;
-//                }
-//            }
-//
-//            //if inside extraQuestion and i = 0 more handling is required
-//            if (flagExtra==2){
-//                answers.remove(i);
-//                flagExtra = 1;
-//                switch (result.get(i).getType()) {
-//                    case 1:
-//                        handleMultipleChoice();
-//                        break;
-//                    case 2:
-//                        handleUserInput();
-//                        break;
-//                }
-//            }
-//
-//            //if i = 0 nothing should happen when back button is pressed.
-//            else if (i==0) {
-//                switch (result.get(i).getType()) {
-//                    case 1:
-//                        handleMultipleChoice();
-//                        break;
-//                    case 2:
-//                        handleUserInput();
-//                        break;
-//                }
-//            }
-//
-//            Log.d("MA", "" + answers);
-//            Log.d("EA", "" + exstraAnswersArray);
-//
-//        }
-
-   // }
-
     public void typeHandler(){
 
         //TYPEHANDLER() is responsible for activating the correct layout
@@ -236,8 +153,8 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
                     int master = result.get(i).getOperation();
                     Log.d("master er ", "" + master);
                     //compare this question condition with the master if true show this question
-                    if (db.getAnswer(master) == result.get(i).getQcondition()) {
-                        Log.d("forrige svar var ", "" + db.getAnswer(master));
+                    if (db.getAnswer(master,session) == result.get(i).getQcondition()) {
+                        Log.d("forrige svar var ", "" + db.getAnswer(master,session));
                         Log.d("Spørgsmålet skal vises", "hurra");
                         layoutActivator();
                     }
@@ -254,41 +171,38 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
             }
 
             if (activator.equalsIgnoreCase("prev")) {
-                //check if answer is dependent on previous answer
+                //iterate i down and check for invisble question
                 i--;
                 if (result.get(i).getVisible() == 1) {
                     //check which question it operates on
                     int master = result.get(i).getOperation();
                     Log.d("master er ", "" + master);
                     //compare this question condition with the master if true show this question
-                    if (db.getAnswer(master) == result.get(i).getQcondition()) {
-                        Log.d("forrige svar var ", "" + db.getAnswer(master));
+                    if (db.getAnswer(master,session) == result.get(i).getQcondition()) {
+                        Log.d("forrige svar var ", "" + db.getAnswer(master,session));
                         Log.d("Spørgsmålet skal vises", "hurra");
                         layoutActivator();
                     }
 
-                    //if condition is not true skip this question and iterate i.
+                    //if condition is not true skip this question and call methode again
                     else {
                         typeHandler();
                     }
+                    //show the correct layout
                 } else {
                     layoutActivator();
                 }
             }
 
         }
-
         //this makes sure that the last data is saved, and no more layouts are being called - only next activity.
         else if (i == result.size()){
             Log.d("Arrayslut",""+i);
-            Intent intent = new Intent(InterpreterActivity.this,UploadAnswers.class);
-            intent.putExtra("answersArray", answers);
-            intent.putExtra("extraanswersArray", exstraAnswersArray);
+            Intent intent = new Intent(InterpreterActivity.this,MainUserActivity.class);
             intent.putExtra("questionArray", result);
             startActivity(intent);
         }
-
-    }
+        }
 
     public void layoutActivator(){
 
@@ -299,7 +213,7 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
 
         //Case 2 - User input
         if (result.get(i).getType() == 2) {
-           // setLayoutUserInput();
+           setLayoutUserInput();
         }// end Case 2
     }
 
@@ -333,7 +247,6 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
             Toast.makeText(InterpreterActivity.this, "Vælg venligst et svar ", Toast.LENGTH_LONG).show();
 
         }
-
     }
     public void setLayoutMultiple(){
 
@@ -392,9 +305,9 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
             String answer = etAnswer.getText().toString();
 
             Log.d("inputuser",""+answer);
-            answers.add(answer);
-
-                i++;
+            db.addAnswer(new Answers(result.get(i).getQuestionID(), PersonInfo.getDiaryID(), PersonInfo.getUserID(), answer, PersonInfo.getQuestionGrp(), currentDateandTime, time, session));
+            db.close();
+            i++;
             //clear editText (not sure if needed)
             etAnswer.setText("");
             //after stuff is handled call typehandler in order for next layout
@@ -402,25 +315,25 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
         }
 
     }
-//    public void setLayoutUserInput(){
-//
-//        String getquestion = result.get(i).getQuestion();
-//        questionfield.setText(getquestion);
-//
-//        etAnswer = new EditText(this);
-//        etAnswer.setBackgroundResource(R.drawable.roundedbutton);
-//        etAnswer.setWidth(30);
-//
-//        answersHold.addView(etAnswer);
-//    }
-//    // !! USER INPUT MODULE FINISH !! //
-//
-//
-//
-//    @Override
-//    public void onBackPressed() {
-//        //disable back button
-//    }
+    public void setLayoutUserInput(){
+
+        String getquestion = result.get(i).getQuestion();
+        questionfield.setText(getquestion);
+
+        etAnswer = new EditText(this);
+        etAnswer.setBackgroundResource(R.drawable.roundedbutton);
+        etAnswer.setWidth(30);
+
+        answersHold.addView(etAnswer);
+    }
+    // !! USER INPUT MODULE FINISH !! //
+
+
+
+    @Override
+    public void onBackPressed() {
+        //disable back button
+    }
 
 
 }

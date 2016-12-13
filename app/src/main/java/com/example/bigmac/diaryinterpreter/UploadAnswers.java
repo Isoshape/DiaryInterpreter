@@ -31,45 +31,45 @@ import java.util.Date;
 
 public class UploadAnswers extends AppCompatActivity implements View.OnClickListener {
 
-//    //sharedpreferences
-//    SharedPreferences pref;
-//    SharedPreferences.Editor editor;
-//
-//    private Button confirmUpload;
-//    private Button regret;
-//    private Button confirmAnswers;
-//
-//    private TextView uploadtext;
-//
-//    LinearLayout ll;
-//    LinearLayout buttonholder;
-//
-//    private ArrayList<String> answers;
-//    private ArrayList<String> extraanswers;
-//    private ArrayList<JsonHolder> questions;
-//    private String finalString;
-//    StringBuilder stringBuilder = new StringBuilder();
-//
-//    @Override
-//    protected void onCreate(Bundle savedInstanceState) {
-//        super.onCreate(savedInstanceState);
-//        setContentView(R.layout.activity_upload_answers);
-//
-//        pref = getApplicationContext().getSharedPreferences("MyPref", 0);
-//        editor = pref.edit();
-//
-//        uploadtext = (TextView) findViewById(R.id.uploadText);
-//
-//        ll = (LinearLayout) findViewById(R.id.uploadlinear);
-//        buttonholder = (LinearLayout) findViewById(R.id.uploadBtnsHolder);
-//
-//        Bundle extras = getIntent().getExtras();
-//        if (extras != null) {
-//            answers = extras.getStringArrayList("answersArray");
-//            extraanswers = extras.getStringArrayList("extraanswersArray");
-//           // questions = PersonInfo.getQuestionsArray();
-//            questions = (ArrayList<JsonHolder>) getIntent().getSerializableExtra("questionArray");
-//
+    //sharedpreferences
+    SharedPreferences pref;
+    SharedPreferences.Editor editor;
+
+    private Button confirmUpload;
+    private Button regret;
+    private Button confirmAnswers;
+
+    private TextView uploadtext;
+
+    LinearLayout ll;
+    LinearLayout buttonholder;
+
+    private ArrayList<String> answers;
+    private ArrayList<String> extraanswers;
+    private ArrayList<JsonHolder> questions;
+    private String finalString;
+    StringBuilder stringBuilder = new StringBuilder();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_upload_answers);
+
+        pref = getApplicationContext().getSharedPreferences("MyPref", 0);
+        editor = pref.edit();
+
+        uploadtext = (TextView) findViewById(R.id.uploadText);
+
+        ll = (LinearLayout) findViewById(R.id.uploadlinear);
+        buttonholder = (LinearLayout) findViewById(R.id.uploadBtnsHolder);
+
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            answers = extras.getStringArrayList("answersArray");
+            extraanswers = extras.getStringArrayList("extraanswersArray");
+           // questions = PersonInfo.getQuestionsArray();
+            questions = (ArrayList<JsonHolder>) getIntent().getSerializableExtra("questionArray");
+
 //            if (questions.size()>0) {
 //                showAnswersNormal();
 //                createButtons();
@@ -80,10 +80,10 @@ public class UploadAnswers extends AppCompatActivity implements View.OnClickList
 //            if (questions.size()==0){
 //                noAnswers();
 //            }
-//
-//        }
-//
-//    }
+
+        }
+
+    }
 //
 //    public void createButtons(){
 //
