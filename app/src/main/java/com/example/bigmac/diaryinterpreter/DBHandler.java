@@ -31,6 +31,7 @@ public class DBHandler extends SQLiteOpenHelper {
     private static final String KEY_GRP = "questionGrp";
     private static final String KEY_DATE= "datenow";
     private static final String KEY_TIME= "timeevent";
+    private static final String KEY_DURATION = "duration";
     private static final String KEY_SESSION= "session";
 
 
@@ -47,7 +48,7 @@ public class DBHandler extends SQLiteOpenHelper {
         String CREATE_ANSWER_TABLE = "CREATE TABLE " + TABLE_ANSWERS + "("
         + KEY_ANSWERID + " INTEGER PRIMARY KEY," + KEY_QUESTIONID + " INTEGER,"
         + KEY_DIARYID + " INTEGER," + KEY_UUID + " INTEGER," + KEY_ANSWER + " TEXT,"
-                + KEY_GRP + " INTEGER,"+ KEY_DATE + " TEXT," + KEY_TIME + " TEXT," + KEY_SESSION + " INTEGER" + ")";
+                + KEY_GRP + " INTEGER,"+ KEY_DATE + " TEXT," + KEY_TIME + " TEXT," + KEY_DURATION + " TEXT," + KEY_SESSION + " INTEGER" + ")";
 
         db.execSQL(CREATE_ANSWER_TABLE);
 
@@ -76,6 +77,7 @@ public class DBHandler extends SQLiteOpenHelper {
         values.put(KEY_SESSION, answer.getSession()); // session only for local db
         values.put(KEY_DATE, answer.getDate()); // date
         values.put(KEY_TIME, answer.getTime()); // time event
+        values.put(KEY_DURATION, answer.getDuration());
         // Inserting Row
         db.insert(TABLE_ANSWERS, null, values);
         db.close(); // Closing database connection
@@ -83,24 +85,13 @@ public class DBHandler extends SQLiteOpenHelper {
 
     }
 
-//    public void addDateandTime(int session,String date,String time){
-//
-//        SQLiteDatabase db = this.getWritableDatabase();
-//        ContentValues values = new ContentValues();
-//        values.put(KEY_SESSION, session);
-//        values.put(KEY_DATE, date);
-//        values.put(KEY_TIME, time);
-//        db.insert(TABLE_TIME, null, values);
-//        db.close(); // Closing database connection
-//    }
 
-
-
+    //used for operation and condition checks what the answer was
     public int getAnswer(int id,int session){
         int test = -1;
         SQLiteDatabase db = this.getReadableDatabase();
         String[] columns = {KEY_ANSWER};
-        Cursor cursor = db.query(TABLE_ANSWERS, columns, KEY_QUESTIONID + " = '" + id + "' AND " + KEY_SESSION + " = '" + session +"'", null, null, null, null);
+        Cursor cursor = db.query(TABLE_ANSWERS, columns, KEY_QUESTIONID + " = '" + id + "' AND " + KEY_SESSION + " = '" + session + "'", null, null, null, null);
         if (cursor.moveToLast()) {
           if  (cursor != null)
               test = Integer.parseInt(cursor.getString(0));
@@ -109,6 +100,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     }
 
+    //used to the current session in sqlite db
     public int getSession(){
         int test;
         SQLiteDatabase db = this.getReadableDatabase();
@@ -125,20 +117,37 @@ public class DBHandler extends SQLiteOpenHelper {
         return test;
     }
 
-    //used for when using previous button
-    public void deleteLast(){
-        int test;
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_ANSWERS, null, "answerID=(SELECT MAX(answerID) FROM " + TABLE_ANSWERS + ")", null, null, null, null);
-        if (cursor.moveToFirst()) {
-            test = cursor.getInt(0);
-            SQLiteDatabase dba = this.getWritableDatabase();
-            dba.delete(TABLE_ANSWERS, "answerID=" + test, null);
-        }
+    public void updateDuration(String duration,int session){
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues newValues = new ContentValues();
+        newValues.put(KEY_DURATION, duration);
+
+        db.update(TABLE_ANSWERS, newValues, "duration=0 and session="+session, null);
+
+    }
+
+    public void deleteBackBtn(int session){
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_ANSWERS,"session="+session,null);
 
     }
 
 
+    //used for when using previous button
+    public void deleteLast(){
+        int maxAnswerID;
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_ANSWERS, null, "answerID=(SELECT MAX(answerID) FROM " + TABLE_ANSWERS + ")", null, null, null, null);
+        if (cursor.moveToFirst()) {
+            maxAnswerID = cursor.getInt(0);
+            SQLiteDatabase dba = this.getWritableDatabase();
+            dba.delete(TABLE_ANSWERS, "answerID=" + maxAnswerID, null);
+        }
+
+    }
+
+    //used to collect all answers
     public List<Answers> getAllAnswers() {
         List<Answers> answerList = new ArrayList<Answers>();
         // Select All Query
@@ -157,6 +166,7 @@ public class DBHandler extends SQLiteOpenHelper {
                 answer.setQuestionGrp(cursor.getInt(5));
                 answer.setDate(cursor.getString(6));
                 answer.setTime(cursor.getString(7));
+                answer.setDuration(cursor.getString(8));
 
 
                 // Adding answers to list

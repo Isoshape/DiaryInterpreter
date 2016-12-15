@@ -14,6 +14,7 @@ public class Answers {
     private int questionGrp;
     private String date;
     private String time;
+    private String duration;
     private int session;
 
 
@@ -21,7 +22,7 @@ public class Answers {
 
     }
 
-    public Answers(int questionID,int diaryID, int UUID,String answer,int questionGrp,String date,String time,int session){
+    public Answers(int questionID,int diaryID, int UUID,String answer,int questionGrp,String date,String time,String duration,int session){
 
         this.questionID = questionID;
         this.diaryID = diaryID;
@@ -30,6 +31,7 @@ public class Answers {
         this.questionGrp = questionGrp;
         this.date = date;
         this.time = time;
+        this.duration = duration;
         this.session = session;
 
     }
@@ -71,6 +73,11 @@ public class Answers {
         this.time=time;
     }
 
+    public void setDuration(String duration){
+
+        this.duration = duration;
+    }
+
 
     public int getQuestionID(){
 
@@ -105,6 +112,12 @@ public class Answers {
     public String getTime(){
 
         return time;
+    }
+
+    public String getDuration(){
+
+        return duration;
+
     }
 
     public int getSession(){

@@ -13,6 +13,7 @@ import java.util.ArrayList;
     static int userID;
     static int questionGrp;
     static int trigger;
+    static String logourl;
     static ArrayList<JsonHolder> allquestions = null;
     static ArrayList<EventHolder> allevents = null;
 
@@ -60,6 +61,11 @@ import java.util.ArrayList;
 
     }
 
+    public static void setLogourl(String logourl){
+
+        PersonInfo.logourl = logourl;
+    }
+
 
     public static String getFirstName(){
 
@@ -101,6 +107,11 @@ import java.util.ArrayList;
     public static int getTrigger(){
 
         return trigger;
+    }
+
+    public static String getLogourl(){
+
+        return logourl;
     }
 
 

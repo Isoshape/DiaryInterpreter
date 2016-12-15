@@ -3,12 +3,19 @@ package com.example.bigmac.diaryinterpreter;
 
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+
+
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -39,9 +46,9 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
 
 
     //data info
-    String currentDateandTime;
+    String currentDate;
     String time;
-
+    String duration = null;
     //which session are we in
     int session;
 
@@ -49,7 +56,12 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
     //Main iteration variable.
     private int i = 0;
 
+    //Sharedpreferences
+    SharedPreferences pref;
+    SharedPreferences.Editor editor;
 
+    //toolbar
+    private Toolbar toolbar;
 
     private ArrayList<JsonHolder> result = new ArrayList<>();
 
@@ -57,6 +69,26 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_success);
+
+        toolbar = (Toolbar) findViewById(R.id.tool_bar); // Attaching the layout to the toolbar object
+
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        toolbar.setTitle("");
+        toolbar.setSubtitle("");
+
+        ImageView testimmage = (ImageView) toolbar.findViewById(R.id.logohospital);
+        String variableValue = PersonInfo.getLogourl();
+        testimmage.setImageResource(getResources().getIdentifier(variableValue, "drawable", getPackageName()));
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+
+
+        //pref with private mode = 0 (the created file can only be accessed by the calling application)
+        pref = getApplicationContext().getSharedPreferences("MyPref", 0);
+        editor = pref.edit();
 
         //Create database object and get session
         db = new DBHandler(this);
@@ -66,10 +98,18 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
         session = db.getSession()+1;
         Log.d("Hva er session",""+session);
 
+        //checks if event is of type 1.
+        if (PersonInfo.getTrigger() == 1){
+            duration = "0";
+            editor.putInt("session"+PersonInfo.getQuestionGrp(),+session);
+            editor.commit();
+        }
+
         //create date
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        currentDateandTime = sdf.format(new Date());
-        time = "00:00:00";
+        currentDate = sdf.format(new Date());
+        sdf = new SimpleDateFormat("HH:mm:ss");
+        time = sdf.format(new Date().getTime());
 
 
         //Layout
@@ -95,6 +135,45 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
         typeHandler();
 
     }
+
+    //Menu creation
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            Log.d("NU SKAL JEG HJÆLPE DIG!","HER");
+        }
+
+        if (item.getItemId() == android.R.id.home) {
+
+            if (PersonInfo.getTrigger()==1){
+                editor.putBoolean("switchState" + PersonInfo.getQuestionGrp(), false);
+                editor.commit();
+            }
+            db.deleteBackBtn(session);
+            Intent intent = new Intent(InterpreterActivity.this,MainUserActivity.class);
+            startActivity(intent);
+        }
+
+
+        return super.onOptionsItemSelected(item);
+    }
+
+
+
+
     @Override
     public void onClick(View v) {
 
@@ -236,7 +315,7 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
         if (Integer.parseInt(rG1_CheckId) > -1) {
 
 
-            db.addAnswer(new Answers(result.get(i).getQuestionID(),PersonInfo.getDiaryID(),PersonInfo.getUserID(),rG1_CheckId,PersonInfo.getQuestionGrp(),currentDateandTime,time,session));
+            db.addAnswer(new Answers(result.get(i).getQuestionID(),PersonInfo.getDiaryID(),PersonInfo.getUserID(),rG1_CheckId,PersonInfo.getQuestionGrp(), currentDate,time,duration,session));
             db.close();
             i++;
             typeHandler();
@@ -305,7 +384,7 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
             String answer = etAnswer.getText().toString();
 
             Log.d("inputuser",""+answer);
-            db.addAnswer(new Answers(result.get(i).getQuestionID(), PersonInfo.getDiaryID(), PersonInfo.getUserID(), answer, PersonInfo.getQuestionGrp(), currentDateandTime, time, session));
+            db.addAnswer(new Answers(result.get(i).getQuestionID(), PersonInfo.getDiaryID(), PersonInfo.getUserID(), answer, PersonInfo.getQuestionGrp(), currentDate, time, duration, session));
             db.close();
             i++;
             //clear editText (not sure if needed)

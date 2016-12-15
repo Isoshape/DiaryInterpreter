@@ -1,5 +1,6 @@
 package com.example.bigmac.diaryinterpreter;
 
+
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -8,11 +9,14 @@ import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.support.v7.widget.Toolbar;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Switch;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -68,15 +72,30 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
     HttpURLConnection conn;
     URL url = null;
 
+    //sqlite
+    DBHandler db;
+
+    //toolbar
+    private Toolbar toolbar;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_user);
 
-//        PersonInfo.setFirstName("Nichlas");
-//        PersonInfo.setDiaryID("1");
+        toolbar = (Toolbar) findViewById(R.id.tool_bar); // Attaching the layout to the toolbar object
 
-        setTitle("Velkommen "+PersonInfo.getFirstName());
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        toolbar.setTitle("");
+        toolbar.setSubtitle("");
+
+        ImageView testimmage = (ImageView) toolbar.findViewById(R.id.logohospital);
+        String variableValue = PersonInfo.getLogourl();
+        testimmage.setImageResource(getResources().getIdentifier(variableValue, "drawable", getPackageName()));
+
+        db = new DBHandler(this);
 
         //pref with private mode = 0 (the created file can only be accessed by the calling application)
         pref = getApplicationContext().getSharedPreferences("MyPref", 0);
@@ -116,6 +135,32 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
     }
 
+    //Menu creation
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            Log.d("NU SKAL JEG HJÆLPE DIG!","HER");
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+
+
+
     //Methode for creating diary buttons + events buttons/switchs
     public void setLayout(){
 
@@ -137,8 +182,8 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
                 timeEventsHolder.addView(switchTag);
 
             }
-            //if the eventype is 2, this equals to question event = create button
-            if (allEvents.get(j).getEventType()==2){
+            //if the eventype is 0, this equals to question event = create button
+            if (allEvents.get(j).getEventType()==0){
                 Button btnTag = new Button(this);
                 btnTag.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
                 btnTag.setText("" + allEvents.get(j).getEventName());
@@ -217,10 +262,10 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
             String[] eventInfo = universalbutton.getTag().toString().split(",");
             String eventType = eventInfo[0];
             String eventID = eventInfo[1];
-            PersonInfo.setTrigger(0);
-                Log.d("Trigger is now ", "" + PersonInfo.getTrigger());
-                Log.d("Event  ",""+eventType);
-                Log.d("ID",""+eventID);
+            PersonInfo.setQuestionGrp(Integer.parseInt(eventID));
+            PersonInfo.setTrigger(Integer.parseInt(eventType));
+
+            activateIntepreter();
         }
     };
 
@@ -243,7 +288,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
                 PersonInfo.setQuestionGrp(Integer.parseInt(eventID));
                 //TRIGGER ID IS WHAT KIND OF EVENT THIS IS WHEN IN UPLOADANSWERS ACTIVITY.
                 //IF TIME EVENT WE DONT WANT TO UPLOAD ANSWERS BEFORE TIME SWITCH IS OFF, THEREFOR DIFFERENT HANDLING IS REQUIRED
-                PersonInfo.setTrigger(1);
+                PersonInfo.setTrigger(Integer.parseInt(eventType));
                 //Set the eventID
                 long startTime = System.currentTimeMillis();
                 //Saving the state of the switch, for when returning to the activity
@@ -253,7 +298,6 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
                 editor.commit();
                 Log.d("Trigger is now ", "" + PersonInfo.getTrigger());
                 activateIntepreter();
-
             }
 
             if (!universalSwitch.isChecked()){
@@ -264,12 +308,12 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
                 editor.commit();
                 String svar = pref.getString("answers"+PersonInfo.getQuestionGrp(),null);
                 Log.d("Svare fra tidligere var",""+svar);
+
                 eventEnded(eventID);
 
             }
         }
     };
-
 
     public void eventEnded(String eventID){
 
@@ -283,8 +327,10 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
                 TimeUnit.MILLISECONDS.toSeconds(result) -
                         TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(result)));
 
-        String[] timespent = hms.split(":");
         Log.d("Tiden er ",eventID+" SLOG TIDEN FRA TIL "+hms);
+        int session = pref.getInt("session"+eventID,-1);
+        db.updateDuration(hms,session);
+
 
     }
 
@@ -551,9 +597,6 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
     }
 
-
-
-
     private class uploadAnswers extends AsyncTask<String,String,String>{
 
 
@@ -577,6 +620,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
                     jsonAnswers.put("questionGrp",answerList.get(b).getQuestionGrp());
                     jsonAnswers.put("dato",answerList.get(b).getDate());
                     jsonAnswers.put("timer", answerList.get(b).getTime());
+                    jsonAnswers.put("duration", answerList.get(b).getDuration());
                     array.put(jsonAnswers);
 
                 } catch (JSONException e) {

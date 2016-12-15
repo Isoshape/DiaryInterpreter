@@ -4,6 +4,8 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.os.Vibrator;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.app.ProgressDialog;
@@ -51,13 +53,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private int focusIndex;
     ArrayList<EditText> btnArray = new ArrayList<>();
 
-    //PersonInfo personInfo = new PersonInfo();
+    Vibrator viber ;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        viber = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
 
 
         pref = getApplicationContext().getSharedPreferences("MyPref", 0);
@@ -121,6 +125,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Button numbersBtn = new Button(this);
                 numbersBtn.setBackground(null);
                 numbersBtn.setTextSize(30);
+                numbersBtn.setTextColor(Color.WHITE);
                 Log.d("hvad er a nu", "" + a);
 
                 numbersBtn.setText("" + (a + 1 + (i * 3)));
@@ -258,6 +263,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 letterpressed.equals(""+7)||
                 letterpressed.equals(""+8)||
                 letterpressed.equals(""+9)) {
+            viber.vibrate(50);
             btnArray.get(focusIndex).setText(""+letterpressed);
         }
 
@@ -390,6 +396,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             String firstname;
             int uuid;
             int diaryID;
+            String logourl;
 
 
             pdLoading.dismiss();
@@ -405,10 +412,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 firstname = values[0];
                 uuid = Integer.parseInt(values[1]);
                 diaryID = Integer.parseInt(values[2]);
+                logourl = values[3];
+
 
                 PersonInfo.setFirstName(firstname);
                 PersonInfo.setUserID(uuid);
                 PersonInfo.setDiaryID(diaryID);
+                PersonInfo.setLogourl(logourl);
 
                 Toast.makeText(MainActivity.this, "Velkommen! "+firstname+" Dit id er :"+uuid +" "+diaryID, Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(MainActivity.this,MainUserActivity.class);
