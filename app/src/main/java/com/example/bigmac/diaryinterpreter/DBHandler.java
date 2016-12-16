@@ -42,6 +42,8 @@ public class DBHandler extends SQLiteOpenHelper {
         getReadableDatabase();
     }
 
+
+
     @Override
     public void onCreate(SQLiteDatabase db) {
 
@@ -129,7 +131,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     public void deleteBackBtn(int session){
         SQLiteDatabase db = this.getWritableDatabase();
-        db.delete(TABLE_ANSWERS,"session="+session,null);
+        db.delete(TABLE_ANSWERS, "session=" + session, null);
 
     }
 
@@ -151,7 +153,7 @@ public class DBHandler extends SQLiteOpenHelper {
     public List<Answers> getAllAnswers() {
         List<Answers> answerList = new ArrayList<Answers>();
         // Select All Query
-        String selectQuery = "SELECT * FROM " + TABLE_ANSWERS;
+        String selectQuery = "SELECT * FROM "+ TABLE_ANSWERS + " WHERE " + KEY_DURATION + "!=0";
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
         // looping through all rows and adding to list
@@ -168,13 +170,20 @@ public class DBHandler extends SQLiteOpenHelper {
                 answer.setTime(cursor.getString(7));
                 answer.setDuration(cursor.getString(8));
 
-
                 // Adding answers to list
                 answerList.add(answer);
             } while (cursor.moveToNext());
         }
         // return answer list
         return answerList;
+    }
+
+    public void deleteAnswers(){
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_ANSWERS,KEY_DURATION+"!=0",null);
+
+
     }
 
 

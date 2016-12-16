@@ -38,7 +38,7 @@ import java.util.concurrent.TimeUnit;
 
 public class MainUserActivity extends AppCompatActivity implements View.OnClickListener {
 
-    List<Answers> shopList;
+
 
     //sharedpreferences
     SharedPreferences pref;
@@ -57,9 +57,6 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
     private LinearLayout normalEventsHolder;
 
 
-    //test btn
-    private Button test;
-
     //Timeout fields
     public static final int CONNECTION_TIMEOUT = 10000;
     public static final int READ_TIMEOUT = 15000;
@@ -77,6 +74,9 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
     //toolbar
     private Toolbar toolbar;
+
+    //thread
+    static UploadThread uploadThread;
 
 
     @Override
@@ -97,12 +97,10 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
         db = new DBHandler(this);
 
+
         //pref with private mode = 0 (the created file can only be accessed by the calling application)
         pref = getApplicationContext().getSharedPreferences("MyPref", 0);
         editor = pref.edit();
-
-        test = (Button) findViewById(R.id.testbtn);
-        test.setOnClickListener(this);
 
        // eventsholder = (LinearLayout) findViewById(R.id.eventsLayout);
         timeEventsHolder = (LinearLayout) findViewById(R.id.timeEvents);
@@ -110,8 +108,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
         launchInterpreterBtn = (Button) findViewById(R.id.InterpreterBtn);
         launchInterpreterBtn.setOnClickListener(this);
-       // TextView welcome = (TextView) findViewById(R.id.welcomeTextEdit);
-       // welcome.setText("Velkommen " + PersonInfo.getFirstName());
+
 
         //Check if data (questions + events) is allrdy stored from previous session
         jsonQuestionStringData = pref.getString("jsondata",null);
@@ -132,6 +129,43 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
             new AsyncQuestions().execute();
 
         }
+
+
+    }
+    //when activity is active this methodes get called
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        //checks if thread never been created, if true, create it and run it
+        if (uploadThread == null) {
+            startGenerating();
+           // Log.d("Aldrig startet, nu", "nu");
+        }
+        //when returning to activity check if thread is running if true, do nothing
+        //if false start it
+        else {
+            if (uploadThread.isAlive() == true) {
+                //Log.d("den lever allerede", "nu");
+            } else if (uploadThread.isAlive() == false) {
+                startGenerating();
+                //Log.d("Starter den op", "nu");
+            }
+
+        }
+    }
+
+
+    private void startGenerating() {
+        Log.d("start blev kaldt","åh nej");
+        uploadThread = new UploadThread(this);
+        uploadThread.start();
+
+
+    }
+
+    private void stopGenerating() {
+        uploadThread.interrupt();
 
     }
 
@@ -185,7 +219,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
             //if the eventype is 0, this equals to question event = create button
             if (allEvents.get(j).getEventType()==0){
                 Button btnTag = new Button(this);
-                btnTag.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+               // btnTag.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
                 btnTag.setText("" + allEvents.get(j).getEventName());
                 btnTag.setTag(allEvents.get(j).getEventType() + "," + allEvents.get(j).getEventID());
                 btnTag.setOnClickListener(normalEventHandler);
@@ -329,7 +363,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
         Log.d("Tiden er ",eventID+" SLOG TIDEN FRA TIL "+hms);
         int session = pref.getInt("session"+eventID,-1);
-        db.updateDuration(hms,session);
+        db.updateDuration(hms, session);
 
 
     }
@@ -345,16 +379,9 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
             activateIntepreter();
 
         }
-
-        if (v==test){
-
-            Log.d("knap trykket","hejsa");
-            new uploadAnswers().execute();
-
-
-        }
-
     }
+
+
 
     public void activateIntepreter(){
 
@@ -380,7 +407,9 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
         @Override
         protected String doInBackground(String... params) {
 
+            //getting all events attachted to this diaryID
             String resultEvents = getEvents();
+            //getting all questions attachted to this diaryID
             String resultQuestion = getQuestions();
             return resultQuestion + " " + resultEvents;
         }
@@ -403,7 +432,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
             }
             else
-                Log.d("ØVVVVVV!!","Jaaaaa");
+                Log.d("ØVVVVVV!!","nej nej nej nej nej");
         }
     }
 
@@ -597,137 +626,5 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
     }
 
-    private class uploadAnswers extends AsyncTask<String,String,String>{
-
-
-        @Override
-        protected String doInBackground(String... params) {
-
-            DBHandler db = new DBHandler(MainUserActivity.this);
-            List<Answers> answerList = new ArrayList<Answers>();
-            JSONArray array = new JSONArray();
-
-            answerList = db.getAllAnswers();
-
-            for (int b=0;b < answerList.size();b++){
-
-                try {
-                    JSONObject jsonAnswers = new JSONObject();
-                    jsonAnswers.put("questionID",answerList.get(b).getQuestionID());
-                    jsonAnswers.put("diaryID",answerList.get(b).getDiaryID());
-                    jsonAnswers.put("uuid",answerList.get(b).getUUID());
-                    jsonAnswers.put("answer",answerList.get(b).getAnswer());
-                    jsonAnswers.put("questionGrp",answerList.get(b).getQuestionGrp());
-                    jsonAnswers.put("dato",answerList.get(b).getDate());
-                    jsonAnswers.put("timer", answerList.get(b).getTime());
-                    jsonAnswers.put("duration", answerList.get(b).getDuration());
-                    array.put(jsonAnswers);
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-
-
-            String test = sendAnswers(array);
-
-//            Log.d("json array er ",""+array);
-          Log.d("json array String er ",""+array.toString());
-
-
-
-
-            return test;
-        }
-
-
-        @Override
-        protected void onPostExecute(String s) {
-
-            Log.d("Den er færdig",""+s);
-
-        }
-    }//end upload class
-
-    private String sendAnswers(JSONArray array){
-
-        try {
-
-            // Enter URL address where your php file resides
-            url = new URL("http://10.0.2.2/uploadAnswers.php");
-
-        } catch (MalformedURLException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            //return "exception";
-        }
-        try {
-            // Setup HttpURLConnection class to send and receive data from php and mysql
-            conn = (HttpURLConnection) url.openConnection();
-            conn.setReadTimeout(READ_TIMEOUT);
-            conn.setConnectTimeout(CONNECTION_TIMEOUT);
-            conn.setRequestMethod("POST");
-
-            // setDoInput and setDoOutput method depict handling of both send and receive
-            conn.setDoInput(true);
-            conn.setDoOutput(true);
-            conn.connect();
-
-            // Append parameter ID to URL
-            Uri.Builder builder = new Uri.Builder()
-                    .appendQueryParameter("json", array.toString());
-            String query = builder.build().getEncodedQuery();
-
-            // Open connection for sending data
-            OutputStream os = conn.getOutputStream();
-            BufferedWriter writer = new BufferedWriter(
-                    new OutputStreamWriter(os, "UTF-8"));
-            writer.write(query);
-            writer.flush();
-            writer.close();
-            os.close();
-            conn.connect();
-
-
-        } catch (IOException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
-            //return "exception";
-        }
-
-        try {
-
-            int response_code = conn.getResponseCode();
-
-            // Check if successful connection made
-            if (response_code == HttpURLConnection.HTTP_OK) {
-
-                // Read data sent from server
-                InputStream input = conn.getInputStream();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-                StringBuilder result = new StringBuilder();
-                String line;
-
-                while ((line = reader.readLine()) != null) {
-                    result.append(line);
-                    Log.d("testline",line);
-                }
-
-                // Pass data to onPostExecute method
-                return(result.toString());
-
-            }else{
-
-                return("unsuccessful");
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "exception";
-        } finally {
-            conn.disconnect();
-        }
-
-    }
 
 }

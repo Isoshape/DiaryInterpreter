@@ -48,7 +48,7 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
     //data info
     String currentDate;
     String time;
-    String duration = null;
+    String duration = "no duration";
     //which session are we in
     int session;
 
@@ -69,6 +69,9 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_success);
+
+        //stop thread from running
+        MainUserActivity.uploadThread.interrupt();
 
         toolbar = (Toolbar) findViewById(R.id.tool_bar); // Attaching the layout to the toolbar object
 
@@ -135,6 +138,7 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
         typeHandler();
 
     }
+
 
     //Menu creation
     @Override

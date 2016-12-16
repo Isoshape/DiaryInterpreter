@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.os.Vibrator;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -117,7 +118,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         for (int i = 0; i < 3; i++) {
             LinearLayout row = new LinearLayout(this);
-            row.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT,1f));
+            row.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
 
 
             for (int a = 0; a < 3; a++) {
@@ -125,6 +126,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Button numbersBtn = new Button(this);
                 numbersBtn.setBackground(null);
                 numbersBtn.setTextSize(30);
+                //numbersBtn.setBackground(getResources().getDrawable(R.drawable.btntest));
                 numbersBtn.setTextColor(Color.WHITE);
                 Log.d("hvad er a nu", "" + a);
 
@@ -467,4 +469,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         }
     }
+
 }
