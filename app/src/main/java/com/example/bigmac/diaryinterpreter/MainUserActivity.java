@@ -1,11 +1,20 @@
 package com.example.bigmac.diaryinterpreter;
 
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.CountDownTimer;
+import android.support.design.widget.FloatingActionButton;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -14,9 +23,15 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.support.v7.widget.Toolbar;
+
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+
 import android.widget.Switch;
+import android.widget.TextView;
+import android.widget.ToggleButton;
+
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -31,12 +46,16 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 
 public class MainUserActivity extends AppCompatActivity implements View.OnClickListener {
+
 
 
 
@@ -50,6 +69,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
     //Must be programmatically made
     private Button launchInterpreterBtn;
+    private TextView timeleftTextview;
 
     //Layout for events placement
     //private LinearLayout eventsholder;
@@ -83,6 +103,37 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_user);
+
+        timeleftTextview = (TextView) findViewById(R.id.timeleftTextview);
+
+        long msInDay = 86400000;
+        Calendar c = Calendar.getInstance();
+        c.set(Calendar.HOUR_OF_DAY, 0);
+        c.set(Calendar.MINUTE, 0);
+        c.set(Calendar.SECOND, 0);
+        c.set(Calendar.MILLISECOND, 0);
+        long howMany = msInDay - (System.currentTimeMillis() - c.getTimeInMillis());
+
+        new CountDownTimer(howMany, 1000) {
+
+            public void onTick(long millisUntilFinished) {
+
+                SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+                String time = sdf.format(millisUntilFinished);
+                timeleftTextview.setText("Tidsfrist: " + time);
+                //here you can have your logic to set text to edittext
+            }
+
+            public void onFinish() {
+                timeleftTextview.setText("done!");
+            }
+
+        }.start();
+
+        Log.d("forskel er ",""+howMany);
+
+
+
 
         toolbar = (Toolbar) findViewById(R.id.tool_bar); // Attaching the layout to the toolbar object
 
@@ -164,10 +215,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
     }
 
-    private void stopGenerating() {
-        uploadThread.interrupt();
 
-    }
 
     //Menu creation
     @Override
@@ -201,29 +249,53 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
         //MIssing diary buttons
         //SAVE DATE IN SHAREDPREF WHEN DIARY IS RUN. WHEN THIS ACTIVITY RUNS CHECK SP, DEFAULT RETURN VALUE SHOULD BE THIS DATE = MEANING NO DIARY HAS EVER BEEN RUN!
 
+         Drawable drawableTop = ResourcesCompat.getDrawable(getResources(), R.drawable.testcirc, null);
+        int margin = 0;
+
         Log.d("HEJ FRA LAYOUT","HEJ HEJ");
         for (int j = 0; j < allEvents.size(); j++) {
 
             //If the eventype is 1, this equals to time event = create switch
             if (allEvents.get(j).getEventType()==1){
-                Switch switchTag = new Switch(this);
-                switchTag.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+                Button switchTag = new Button(this);
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                params.setMargins(margin, 10, 0, 0);
+                switchTag.setLayoutParams(params);
                 switchTag.setText("" + allEvents.get(j).getEventName());
-                switchTag.setTag(allEvents.get(j).getEventType() + "," + allEvents.get(j).getEventID());
+                switchTag.setBackground(null);
+                switchTag.setTextColor(Color.WHITE);
+                switchTag.setCompoundDrawablesWithIntrinsicBounds(null, drawableTop, null, null);
+               // switchTag.setBackgroundResource(R.drawable.circle);
+                switchTag.setTag(allEvents.get(j).getEventType() + "," + allEvents.get(j).getEventID() + "," + allEvents.get(j).getEventName());
                 switchTag.setOnClickListener(switchEventHandler);
                 //when creating the button, get the switch state if it was previously set, if not set to false
-                switchTag.setChecked(pref.getBoolean("switchState"+allEvents.get(j).getEventID(),false));
-                timeEventsHolder.addView(switchTag);
+                //switchTag.setChecked(pref.getBoolean("switchState"+allEvents.get(j).getEventID(),false));
+                normalEventsHolder.addView(switchTag);
+                //timeEventsHolder.addView(switchTag);
 
             }
             //if the eventype is 0, this equals to question event = create button
             if (allEvents.get(j).getEventType()==0){
                 Button btnTag = new Button(this);
                // btnTag.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                params.setMargins(margin, 10, 0, 0);
+
+                btnTag.setTextColor(Color.WHITE);
+                btnTag.setLayoutParams(params);
                 btnTag.setText("" + allEvents.get(j).getEventName());
+                btnTag.setBackground(null);
+                btnTag.setCompoundDrawablesWithIntrinsicBounds(null, drawableTop , null, null);
+
+
                 btnTag.setTag(allEvents.get(j).getEventType() + "," + allEvents.get(j).getEventID());
                 btnTag.setOnClickListener(normalEventHandler);
+                margin=50;
                 normalEventsHolder.addView(btnTag);
+
+
             }
         }
     }
@@ -298,6 +370,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
             String eventID = eventInfo[1];
             PersonInfo.setQuestionGrp(Integer.parseInt(eventID));
             PersonInfo.setTrigger(Integer.parseInt(eventType));
+            Log.d("questionGRP is now ", "" + PersonInfo.getQuestionGrp());
 
             activateIntepreter();
         }
@@ -310,42 +383,54 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
             //HUSK SWITCH TILSTAND SKAL SLETTES HVIS NY LOGGER IND
             //ALT I SP SKAL SLETTES VED NY BRUGER
 
-            Switch universalSwitch = (Switch) v;
+            Button universalSwitch = (Button) v;
 
             String[] eventInfo = universalSwitch.getTag().toString().split(",");
             String eventType = eventInfo[0];
             String eventID = eventInfo[1];
+            String eventName = eventInfo[2];
 
-            if (universalSwitch.isChecked()){
 
-                //Sets which questions belongs to this event (questionGrp)
-                PersonInfo.setQuestionGrp(Integer.parseInt(eventID));
-                //TRIGGER ID IS WHAT KIND OF EVENT THIS IS WHEN IN UPLOADANSWERS ACTIVITY.
-                //IF TIME EVENT WE DONT WANT TO UPLOAD ANSWERS BEFORE TIME SWITCH IS OFF, THEREFOR DIFFERENT HANDLING IS REQUIRED
-                PersonInfo.setTrigger(Integer.parseInt(eventType));
-                //Set the eventID
-                long startTime = System.currentTimeMillis();
-                //Saving the state of the switch, for when returning to the activity
-                editor.putBoolean("switchState" + eventID, true);
-                //saving the timestart value
-                editor.putLong("starttime"+eventID,+System.currentTimeMillis());
-                editor.commit();
-                Log.d("Trigger is now ", "" + PersonInfo.getTrigger());
-                activateIntepreter();
-            }
 
-            if (!universalSwitch.isChecked()){
-                //Saving the state of the switch, for when returning to the activity
-                editor.putBoolean("switchState" + eventID, false);
-                //saving the timeend value
-                editor.putLong("endtime" + eventID, +System.currentTimeMillis());
-                editor.commit();
-                String svar = pref.getString("answers"+PersonInfo.getQuestionGrp(),null);
-                Log.d("Svare fra tidligere var",""+svar);
+            ToggleButton test = new ToggleButton(MainUserActivity.this);
+            test.setText(eventName);
 
-                eventEnded(eventID);
+            test.setTextOn("aktiv");
+            test.setBackgroundResource(R.drawable.buttoncirc);
+            test.setTextOff("afsluttet");
+            test.setChecked(true);
+            timeEventsHolder.addView(test);
 
-            }
+//            if (universalSwitch.isChecked()){
+//
+//                //Sets which questions belongs to this event (questionGrp)
+//                PersonInfo.setQuestionGrp(Integer.parseInt(eventID));
+//                //TRIGGER ID IS WHAT KIND OF EVENT THIS IS WHEN IN UPLOADANSWERS ACTIVITY.
+//                //IF TIME EVENT WE DONT WANT TO UPLOAD ANSWERS BEFORE TIME SWITCH IS OFF, THEREFOR DIFFERENT HANDLING IS REQUIRED
+//                PersonInfo.setTrigger(Integer.parseInt(eventType));
+//                //Set the eventID
+//                long startTime = System.currentTimeMillis();
+//                //Saving the state of the switch, for when returning to the activity
+//                editor.putBoolean("switchState" + eventID, true);
+//                //saving the timestart value
+//                editor.putLong("starttime"+eventID,+System.currentTimeMillis());
+//                editor.commit();
+//                Log.d("Trigger is now ", "" + PersonInfo.getTrigger());
+//                activateIntepreter();
+//            }
+//
+//            if (!universalSwitch.isChecked()){
+//                //Saving the state of the switch, for when returning to the activity
+//                editor.putBoolean("switchState" + eventID, false);
+//                //saving the timeend value
+//                editor.putLong("endtime" + eventID, +System.currentTimeMillis());
+//                editor.commit();
+//                String svar = pref.getString("answers"+PersonInfo.getQuestionGrp(),null);
+//                Log.d("Svare fra tidligere var",""+svar);
+//
+//                eventEnded(eventID);
+//
+//            }
         }
     };
 
@@ -586,7 +671,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
             // Check if successful connection made
             if (response_code == HttpURLConnection.HTTP_OK) {
 
-                Log.d("connection", "forbindelse etableret");
+                Log.d("connection events!", "forbindelse etableret "+PersonInfo.getDiaryID());
 
                 // Read data sent from server
                 InputStream input = conn.getInputStream();
@@ -598,6 +683,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
                 while ((line = reader.readLine()) != null) {
                     result.append(line);
+                    Log.d("eventsdb", "" + line);
 
                     try {
                         JSONArray arr = new JSONArray(line);
@@ -625,6 +711,42 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
         return ("Success");
 
     }
+
+
+    @Override
+    public void onBackPressed() {
+        exitByBackKey();
+    }
+
+
+    protected void exitByBackKey() {
+
+        AlertDialog alertbox = new AlertDialog.Builder(this)
+                .setMessage("Vil du logge af?")
+                .setPositiveButton("Ja", new DialogInterface.OnClickListener() {
+
+                    // do something when the button is clicked
+                    public void onClick(DialogInterface arg0, int arg1) {
+
+                        Intent intent = new Intent(Intent.ACTION_MAIN);
+                        intent.addCategory(Intent.CATEGORY_HOME);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                        //close();
+
+
+                    }
+                })
+                .setNegativeButton("Nej", new DialogInterface.OnClickListener() {
+
+                    // do something when the button is clicked
+                    public void onClick(DialogInterface arg0, int arg1) {
+                    }
+                })
+                .show();
+
+    }
+
 
 
 }

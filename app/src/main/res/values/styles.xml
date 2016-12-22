@@ -5,7 +5,7 @@
         <!-- Customize your theme here. -->
         <item name="android:textViewStyle">@style/RobotoTextViewStyle</item>
         <item name="android:buttonStyle">@style/RobotoButtonStyle</item>
-
+        <item name="android:radioButtonStyle">@style/RadioButtonStyle</item>
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
@@ -20,10 +20,16 @@
 
     </style>
 
-    <style name="RobotoSwithStyle" parent="android:Widget.s">
-        <item name="android:fontFamily">Mari Heavy</item>
+    <style name="RadioButtonStyle" parent="@android:style/Widget.CompoundButton">
+        <item name="android:background">@drawable/radiobuttonbackground</item>
+
+        <item name="android:textColor">@drawable/radiobutton_a</item>
 
     </style>
 
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
-</resources>
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+
+</resources><!--<item name="android:button">@null</item>-->

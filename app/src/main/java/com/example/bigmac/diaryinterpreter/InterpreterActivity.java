@@ -2,21 +2,32 @@ package com.example.bigmac.diaryinterpreter;
 
 
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
 
 import android.support.v7.widget.Toolbar;
+import android.text.InputType;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
@@ -33,6 +44,7 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
     LinearLayout answersHold;
     RadioGroup rg;
     EditText etAnswer;
+    LinearLayout progrss;
 
     private String activator = "next";
 
@@ -41,9 +53,13 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
     private Button prevButton;
 
 
+
     //dB fields;
     DBHandler db;
 
+
+
+    ProgressBar simpleProgressBar;
 
     //data info
     String currentDate;
@@ -55,6 +71,8 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
 
     //Main iteration variable.
     private int i = 0;
+    //number shower
+
 
     //Sharedpreferences
     SharedPreferences pref;
@@ -67,75 +85,82 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_success);
+            super.onCreate(savedInstanceState);
+            setContentView(R.layout.activity_success);
 
-        //stop thread from running
-        MainUserActivity.uploadThread.interrupt();
+            //stop thread from running
+            MainUserActivity.uploadThread.interrupt();
 
-        toolbar = (Toolbar) findViewById(R.id.tool_bar); // Attaching the layout to the toolbar object
+            toolbar = (Toolbar) findViewById(R.id.tool_bar); // Attaching the layout to the toolbar object
 
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-        toolbar.setTitle("");
-        toolbar.setSubtitle("");
+            setSupportActionBar(toolbar);
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+            toolbar.setTitle("");
+            toolbar.setSubtitle("");
 
-        ImageView testimmage = (ImageView) toolbar.findViewById(R.id.logohospital);
-        String variableValue = PersonInfo.getLogourl();
-        testimmage.setImageResource(getResources().getIdentifier(variableValue, "drawable", getPackageName()));
+            ImageView testimmage = (ImageView) toolbar.findViewById(R.id.logohospital);
+            String variableValue = PersonInfo.getLogourl();
+            testimmage.setImageResource(getResources().getIdentifier(variableValue, "drawable", getPackageName()));
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
-
-
-
-        //pref with private mode = 0 (the created file can only be accessed by the calling application)
-        pref = getApplicationContext().getSharedPreferences("MyPref", 0);
-        editor = pref.edit();
-
-        //Create database object and get session
-        db = new DBHandler(this);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
 
 
 
-        session = db.getSession()+1;
-        Log.d("Hva er session",""+session);
+            simpleProgressBar=(ProgressBar)findViewById(R.id.progressBar);
+            simpleProgressBar.getProgressDrawable().setColorFilter(Color.BLUE, PorterDuff.Mode.SRC_IN);
 
-        //checks if event is of type 1.
-        if (PersonInfo.getTrigger() == 1){
-            duration = "0";
-            editor.putInt("session"+PersonInfo.getQuestionGrp(),+session);
-            editor.commit();
-        }
+            //pref with private mode = 0 (the created file can only be accessed by the calling application)
+            pref = getApplicationContext().getSharedPreferences("MyPref", 0);
+            editor = pref.edit();
 
-        //create date
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        currentDate = sdf.format(new Date());
-        sdf = new SimpleDateFormat("HH:mm:ss");
-        time = sdf.format(new Date().getTime());
+            //Create database object and get session
+            db = new DBHandler(this);
 
 
-        //Layout
-        answersHold = (LinearLayout) findViewById(R.id.answerHolder);
-        questionfield = (TextView) findViewById(R.id.main_title_textView);
-        nextButton = (Button) findViewById(R.id.nextquiz);
-        nextButton.setOnClickListener(this);
-        prevButton = (Button) findViewById(R.id.prevquiz);
-        prevButton.setOnClickListener(this);
+            //Find last session and add 1
+            session = db.getSession()+1;
+            Log.d("Hva er session",""+session);
 
-
-
-            //HERE WE SHOULD GET ONLY QUESTION WITH THE QUESTIONGRP ID
-            for (int c = 0;c<PersonInfo.getQuestionsArray().size();c++){
-
-            if (PersonInfo.getQuestionsArray().get(c).getQuestionGrp()==PersonInfo.getQuestionGrp()){
-                Log.d("C's indhold", "" + PersonInfo.getQuestionsArray().get(c));
-                result.add(PersonInfo.getQuestionsArray().get(c));
+            //checks if event is of type 1.
+            if (PersonInfo.getTrigger() == 1){
+                duration = "0";
+                editor.putInt("session"+PersonInfo.getQuestionGrp(),+session);
+                editor.commit();
             }
-        }
 
-        Log.d("mit array", "" + result);
-        typeHandler();
+            //create date
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            currentDate = sdf.format(new Date());
+            sdf = new SimpleDateFormat("HH:mm:ss");
+            time = sdf.format(new Date().getTime());
+
+
+            //Layout
+            answersHold = (LinearLayout) findViewById(R.id.answerHolder);
+            questionfield = (TextView) findViewById(R.id.main_title_textView);
+
+            nextButton = (Button) findViewById(R.id.nextquiz);
+            nextButton.setOnClickListener(this);
+            prevButton = (Button) findViewById(R.id.prevquiz);
+            prevButton.setOnClickListener(this);
+
+
+
+                //HERE WE SHOULD GET ONLY QUESTION WITH THE QUESTIONGRP ID
+                for (int c = 0;c<PersonInfo.getQuestionsArray().size();c++){
+
+                if (PersonInfo.getQuestionsArray().get(c).getQuestionGrp()==PersonInfo.getQuestionGrp()){
+                    Log.d("C's indhold", "" + PersonInfo.getQuestionsArray().get(c));
+                    result.add(PersonInfo.getQuestionsArray().get(c));
+                }
+            }
+
+            Log.d("mit array", "" + result);
+
+            simpleProgressBar.setMax(result.size());
+
+            typeHandler();
 
     }
 
@@ -162,13 +187,9 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
 
         if (item.getItemId() == android.R.id.home) {
 
-            if (PersonInfo.getTrigger()==1){
-                editor.putBoolean("switchState" + PersonInfo.getQuestionGrp(), false);
-                editor.commit();
-            }
-            db.deleteBackBtn(session);
-            Intent intent = new Intent(InterpreterActivity.this,MainUserActivity.class);
-            startActivity(intent);
+            exitByBackKey();
+//            Intent intent = new Intent(InterpreterActivity.this,MainUserActivity.class);
+//            startActivity(intent);
         }
 
 
@@ -178,10 +199,15 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
 
 
 
+
+
     @Override
     public void onClick(View v) {
 
+
+
         if (v == nextButton) {
+
 
             //make sure to reset view
             answersHold.removeAllViews();
@@ -217,6 +243,8 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
                }
 
             }
+
+
 
     }
 
@@ -277,6 +305,8 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
                 }
             }
 
+            simpleProgressBar.setProgress(i);
+
         }
         //this makes sure that the last data is saved, and no more layouts are being called - only next activity.
         else if (i == result.size()){
@@ -335,13 +365,16 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
 
             rg = new RadioGroup(getApplicationContext()); //create the RadioGroup
             rg.setOrientation(RadioGroup.VERTICAL);
+
+
+
             rg.removeAllViews();
             if (i<result.size()) {
 
             String getquestion = result.get(i).getQuestion();
 
             //Get question from arraylist
-            questionfield.setText(""+(i+1)+" / "+result.size()+ " " + getquestion);
+            questionfield.setText(getquestion);
 
             //get possible answers in insert them in an string array
             String[] questionssplit = result.get(i).getAnswers();
@@ -349,10 +382,26 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
             for (; a < questionssplit.length; a++) {
                 //create radiobuttons equal to size of possible answers, string array
                 RadioButton newRadioButton = new RadioButton(InterpreterActivity.this);
-               // newRadioButton.setTextColor(Color.parseColor("#03fe6d"));
+               // newRadioButton.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+//
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                );
+                newRadioButton.setLayoutParams(params);
+
+
+
+                newRadioButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 10F, this.getResources().getDisplayMetrics()));
+               // newRadioButton.setPadding(0, 110, 0, 110);
+                newRadioButton.setGravity(Gravity.CENTER);
                 newRadioButton.setText("" + questionssplit[a]);
                 newRadioButton.setId(a);
+
+
                 rg.addView(newRadioButton, a);
+
+
 
             }//end for
             answersHold.addView(rg);
@@ -361,7 +410,7 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
                 nextButton.setText("Afslut");
             }
             else {
-                nextButton.setText("Næste spørgsmål");
+                nextButton.setText("Næste");
             }
 
         }
@@ -402,10 +451,12 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
 
         String getquestion = result.get(i).getQuestion();
         questionfield.setText(getquestion);
-
+        final LinearLayout.LayoutParams lparams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,200);
         etAnswer = new EditText(this);
+        etAnswer.setLayoutParams(lparams);
+        etAnswer.setInputType(InputType.TYPE_CLASS_TEXT);
+        etAnswer.setImeOptions(EditorInfo.IME_ACTION_DONE);
         etAnswer.setBackgroundResource(R.drawable.roundedbutton);
-        etAnswer.setWidth(30);
 
         answersHold.addView(etAnswer);
     }
@@ -415,8 +466,39 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
 
     @Override
     public void onBackPressed() {
-        //disable back button
+        exitByBackKey();
     }
 
+
+    protected void exitByBackKey() {
+
+        AlertDialog alertbox = new AlertDialog.Builder(this)
+                .setMessage("Vil du virkelig afslutte? (alt data mistes)")
+                .setPositiveButton("Ja", new DialogInterface.OnClickListener() {
+
+                    // do something when the button is clicked
+                    public void onClick(DialogInterface arg0, int arg1) {
+
+                        if (PersonInfo.getTrigger()==1){
+                            editor.putBoolean("switchState" + PersonInfo.getQuestionGrp(), false);
+                            editor.commit();
+                        }
+                        db.deleteBackBtn(session);
+                        Intent goback = new Intent(InterpreterActivity.this,MainUserActivity.class);
+                        startActivity(goback);
+                        //close();
+
+
+                    }
+                })
+                .setNegativeButton("Nej", new DialogInterface.OnClickListener() {
+
+                    // do something when the button is clicked
+                    public void onClick(DialogInterface arg0, int arg1) {
+                    }
+                })
+                .show();
+
+    }
 
 }
