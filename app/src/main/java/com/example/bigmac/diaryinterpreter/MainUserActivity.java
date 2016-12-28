@@ -138,8 +138,8 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
         //sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
 
 
-        drawableTop = ResourcesCompat.getDrawable(getResources(), R.drawable.newbtn, null);
-        drawableToptrue = ResourcesCompat.getDrawable(getResources(), R.drawable.newbtnred, null);
+        drawableTop = ResourcesCompat.getDrawable(getResources(), R.drawable.buttonfalse, null);
+        drawableToptrue = ResourcesCompat.getDrawable(getResources(), R.drawable.buttonactive, null);
 
         //pref with private mode = 0 (the created file can only be accessed by the calling application)
         pref = getApplicationContext().getSharedPreferences("MyPref", 0);
@@ -686,7 +686,9 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
         @Override
         public void onDateTimeCancel()
         {
-            Log.d("Du har cancleret ","yup og event id var "+eid);
+            editor.putBoolean("state" + eid, true);
+            editor.commit();
+            setLayout();
         }
     };
 
@@ -1006,9 +1008,10 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
                     // do something when the button is clicked
                     public void onClick(DialogInterface arg0, int arg1) {
 
-                        Intent intent = new Intent(Intent.ACTION_MAIN);
-                        startActivity(intent);
-                        finish();
+                        Intent homeIntent= new Intent(Intent.ACTION_MAIN);
+                        homeIntent.addCategory(Intent.CATEGORY_HOME);
+                        homeIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        startActivity(homeIntent);
                         //close();
 
 
