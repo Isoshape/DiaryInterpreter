@@ -1,7 +1,5 @@
 package com.example.bigmac.diaryinterpreter;
 
-import java.util.Date;
-
 /**
  * Created by BigMac on 08/12/16.
  */

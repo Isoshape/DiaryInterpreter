@@ -2,35 +2,42 @@ package com.example.bigmac.diaryinterpreter;
 
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.ColorStateList;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.support.v7.widget.Toolbar;
-
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-
-import android.widget.Switch;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.ToggleButton;
+import android.widget.TimePicker;
+import android.widget.Toast;
 
+import com.github.amlcurran.showcaseview.ShowcaseView;
+import com.github.amlcurran.showcaseview.targets.ViewTarget;
+import com.github.jjobes.slidedatetimepicker.SlideDateTimeListener;
+import com.github.jjobes.slidedatetimepicker.SlideDateTimePicker;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -46,35 +53,42 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 
 public class MainUserActivity extends AppCompatActivity implements View.OnClickListener {
 
+    ShowcaseView showcaseView;
 
-
+    int counter = 0;
+    boolean answerstate = false;
 
     //sharedpreferences
     SharedPreferences pref;
     SharedPreferences.Editor editor;
 
     //QuestionsString & eventsString
-    String jsonQuestionStringData=null;
-    String jsonEventsStringData=null;
+    String jsonQuestionStringData = null;
+    String jsonEventsStringData = null;
 
     //Must be programmatically made
     private Button launchInterpreterBtn;
     private TextView timeleftTextview;
+    private TextView incidentTextview;
+    private TextView myevents;
+
 
     //Layout for events placement
     //private LinearLayout eventsholder;
     private LinearLayout timeEventsHolder;
     private LinearLayout normalEventsHolder;
+    private RelativeLayout relativScroll;
 
 
     //Timeout fields
@@ -84,6 +98,8 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
     //Questions and Events arrays
     ArrayList<JsonHolder> allquestions = new ArrayList<JsonHolder>();
     ArrayList<EventHolder> allEvents = new ArrayList<EventHolder>();
+    //textviewholder
+    ArrayList<TextView> txtArray = new ArrayList<>();
 
     //php connector
     HttpURLConnection conn;
@@ -98,43 +114,50 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
     //thread
     static UploadThread uploadThread;
 
+    //drawables
+    Drawable drawableTop;
+    Drawable drawableToptrue;
+
+
+    //date variables
+    String date;
+    boolean state;
+
+    SimpleDateFormat sdf;
+    String currentDate;
+    long msInDay = 86400000;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_user);
 
+        sdf = new SimpleDateFormat("HH:mm:ss");
+        //sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
+
+
+        drawableTop = ResourcesCompat.getDrawable(getResources(), R.drawable.newbtn, null);
+        drawableToptrue = ResourcesCompat.getDrawable(getResources(), R.drawable.newbtnred, null);
+
+        //pref with private mode = 0 (the created file can only be accessed by the calling application)
+        pref = getApplicationContext().getSharedPreferences("MyPref", 0);
+        editor = pref.edit();
+
+        //Declare all views
         timeleftTextview = (TextView) findViewById(R.id.timeleftTextview);
-
-        long msInDay = 86400000;
-        Calendar c = Calendar.getInstance();
-        c.set(Calendar.HOUR_OF_DAY, 0);
-        c.set(Calendar.MINUTE, 0);
-        c.set(Calendar.SECOND, 0);
-        c.set(Calendar.MILLISECOND, 0);
-        long howMany = msInDay - (System.currentTimeMillis() - c.getTimeInMillis());
-
-        new CountDownTimer(howMany, 1000) {
-
-            public void onTick(long millisUntilFinished) {
-
-                SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
-                String time = sdf.format(millisUntilFinished);
-                timeleftTextview.setText("Tidsfrist: " + time);
-                //here you can have your logic to set text to edittext
-            }
-
-            public void onFinish() {
-                timeleftTextview.setText("done!");
-            }
-
-        }.start();
-
-        Log.d("forskel er ",""+howMany);
+        incidentTextview = (TextView) findViewById(R.id.activeIncidentTxtView);
+        myevents = (TextView) findViewById(R.id.eventsTxtview);
+        launchInterpreterBtn = (Button) findViewById(R.id.InterpreterBtn);
+        launchInterpreterBtn.setOnClickListener(this);
+        // eventsholder = (LinearLayout) findViewById(R.id.eventsLayout);
+        timeEventsHolder = (LinearLayout) findViewById(R.id.timeEvents);
+        normalEventsHolder = (LinearLayout) findViewById(R.id.normalEvents);
+        relativScroll = (RelativeLayout) findViewById(R.id.relativScroll);
 
 
-
-
+        //SET TOOLBAR
         toolbar = (Toolbar) findViewById(R.id.tool_bar); // Attaching the layout to the toolbar object
 
         setSupportActionBar(toolbar);
@@ -149,25 +172,13 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
         db = new DBHandler(this);
 
 
-        //pref with private mode = 0 (the created file can only be accessed by the calling application)
-        pref = getApplicationContext().getSharedPreferences("MyPref", 0);
-        editor = pref.edit();
-
-       // eventsholder = (LinearLayout) findViewById(R.id.eventsLayout);
-        timeEventsHolder = (LinearLayout) findViewById(R.id.timeEvents);
-        normalEventsHolder = (LinearLayout) findViewById(R.id.normalEvents);
-
-        launchInterpreterBtn = (Button) findViewById(R.id.InterpreterBtn);
-        launchInterpreterBtn.setOnClickListener(this);
-
-
         //Check if data (questions + events) is allrdy stored from previous session
-        jsonQuestionStringData = pref.getString("jsondata",null);
-        jsonEventsStringData = pref.getString("jsoneventdata",null);
+        jsonQuestionStringData = pref.getString("jsondata", null);
+        jsonEventsStringData = pref.getString("jsoneventdata", null);
         //
 
         //if data is availbe parse the data
-        if (jsonQuestionStringData != null && jsonEventsStringData != null){
+        if (jsonQuestionStringData != null && jsonEventsStringData != null) {
 
             parseJsonQuestions();
             parseJsonEvents();
@@ -181,17 +192,64 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
         }
 
+        Log.d("onCreate", " er kaldet!!");
 
     }
+
+
+    public void countDown() {
+
+        final SimpleDateFormat timezone = new SimpleDateFormat("HH:mm:ss");
+        timezone.setTimeZone(TimeZone.getTimeZone("GMT"));
+
+        Calendar c = Calendar.getInstance();
+        c.setTimeZone(TimeZone.getDefault());
+        c.set(Calendar.HOUR_OF_DAY, 0);
+        c.set(Calendar.MINUTE, 0);
+        c.set(Calendar.SECOND, 0);
+        c.set(Calendar.MILLISECOND, 0);
+        long howMany = msInDay - (System.currentTimeMillis() - c.getTimeInMillis());
+
+        new CountDownTimer(howMany, 1000) {
+
+            public void onTick(long millisUntilFinished) {
+
+                if (answerstate == true) {
+
+
+                }
+                else if (answerstate == false) {
+
+                    String time = timezone.format(millisUntilFinished);
+                    timeleftTextview.setText("Tidsfrist: " + time);
+                    //here you can have your logic to set text to edittext
+                }
+            }
+
+            public void onFinish() {
+                //next patch - when timer finished check state. If state is still false notice that that day wasent answered!
+                editor.putBoolean("state", false);
+                editor.commit();
+                answerstate = false;
+                countDown();
+                launchInterpreterBtn.setBackgroundResource(R.drawable.bluecircle);
+                //timeleftTextview.setText("Tak for dit svar. På gensyn i morgen");
+            }
+
+        }.start();
+
+    }
+
+
     //when activity is active this methodes get called
     @Override
     public void onStart() {
         super.onStart();
-
+        Log.d("onStart", " er kaldet!!");
         //checks if thread never been created, if true, create it and run it
         if (uploadThread == null) {
             startGenerating();
-           // Log.d("Aldrig startet, nu", "nu");
+            // Log.d("Aldrig startet, nu", "nu");
         }
         //when returning to activity check if thread is running if true, do nothing
         //if false start it
@@ -204,17 +262,58 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
             }
 
         }
+
+
+        //CHECK IF PT HAS ANSWERED TO DAY
+        SimpleDateFormat dayformat = new SimpleDateFormat("yyyy-MM-dd");
+        date = pref.getString("date", "0000-00-00");
+        state = pref.getBoolean("state", false);
+        currentDate = dayformat.format(new Date());
+
+        Log.d("date og state er: ","state: "+state + " date: "+date + " currentdate er: "+currentDate);
+
+        if (date.equalsIgnoreCase(currentDate) && state == true) {
+            Log.d("Kommer vi herind?","test");
+            answerstate = true;
+            launchInterpreterBtn.setBackgroundResource(R.drawable.circle);
+            timeleftTextview.setText("Tak for dit svar. På gensyn i morgen");
+
+        } else {
+            editor.putBoolean("state", false);
+            editor.commit();
+            answerstate = false;
+        }
+        ///////
+        countDown();
+
+
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+
+    }
+
+    protected void onStop() {
+        // call the superclass method first
+        super.onStop();
+
+    }
+
+    protected void onResume() {
+        super.onResume();
+        setLayout();
+    }
 
     private void startGenerating() {
-        Log.d("start blev kaldt","åh nej");
+
+        Log.d("start blev kaldt", "åh nej");
         uploadThread = new UploadThread(this);
         uploadThread.start();
 
 
     }
-
 
 
     //Menu creation
@@ -234,80 +333,103 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            Log.d("NU SKAL JEG HJÆLPE DIG!","HER");
+            counter = 0;
+            showcaseView = new ShowcaseView.Builder(this)
+                    .setStyle(R.style.CustomShowcaseTheme)
+                    .setTarget(new ViewTarget(findViewById(R.id.InterpreterBtn)))
+                            // .setShowcaseDrawer(new CustomShowcaseViewAlone(getResources()))
+                    .setContentTitle("Dette er din dagbogsknap")
+                    .setContentText("Denne skal besvares en gang om dagen. Tryk på ikonet for at starte dagbogen")
+                    .setOnClickListener(showCaseHandler)
+                    .build();
+            showcaseView.setButtonText("Næste");
+
         }
 
         return super.onOptionsItemSelected(item);
     }
 
 
-
-
     //Methode for creating diary buttons + events buttons/switchs
-    public void setLayout(){
+    public void setLayout() {
 
         //MIssing diary buttons
         //SAVE DATE IN SHAREDPREF WHEN DIARY IS RUN. WHEN THIS ACTIVITY RUNS CHECK SP, DEFAULT RETURN VALUE SHOULD BE THIS DATE = MEANING NO DIARY HAS EVER BEEN RUN!
 
-         Drawable drawableTop = ResourcesCompat.getDrawable(getResources(), R.drawable.testcirc, null);
+        timeEventsHolder.removeAllViews();
+        normalEventsHolder.removeAllViews();
         int margin = 0;
+        incidentTextview.setText("Ingen aktive hændelser...");
 
-        Log.d("HEJ FRA LAYOUT","HEJ HEJ");
+
+        Log.d("HEJ FRA LAYOUT", "HEJ HEJ");
         for (int j = 0; j < allEvents.size(); j++) {
 
             //If the eventype is 1, this equals to time event = create switch
-            if (allEvents.get(j).getEventType()==1){
+            if (allEvents.get(j).getEventType() == 1) {
                 Button switchTag = new Button(this);
                 LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                params.setMargins(margin, 10, 0, 0);
+                params.setMargins(margin, 40, 0, 0);
                 switchTag.setLayoutParams(params);
                 switchTag.setText("" + allEvents.get(j).getEventName());
                 switchTag.setBackground(null);
                 switchTag.setTextColor(Color.WHITE);
-                switchTag.setCompoundDrawablesWithIntrinsicBounds(null, drawableTop, null, null);
-               // switchTag.setBackgroundResource(R.drawable.circle);
+                boolean localstate = pref.getBoolean("state" + allEvents.get(j).getEventID(), false);
+                if (localstate) {
+                    switchTag.setCompoundDrawablesWithIntrinsicBounds(null, drawableToptrue, null, null);
+                    TextView timevent = new TextView(this);
+                    String time = pref.getString("eventtime" + allEvents.get(j).getEventID(), "00:00:00");
+                    timevent.setText(allEvents.get(j).getEventName() + ": " + time);
+                    timevent.setTextColor(Color.WHITE);
+                    timevent.setId(Integer.parseInt(allEvents.get(j).getEventID()));
+                    timevent.setGravity(Gravity.CENTER);
+                    timeEventsHolder.addView(timevent);
+                    incidentTextview.setText("Aktive hændelser");
+                } else {
+                    switchTag.setCompoundDrawablesWithIntrinsicBounds(null, drawableTop, null, null);
+
+                }
+
                 switchTag.setTag(allEvents.get(j).getEventType() + "," + allEvents.get(j).getEventID() + "," + allEvents.get(j).getEventName());
                 switchTag.setOnClickListener(switchEventHandler);
-                //when creating the button, get the switch state if it was previously set, if not set to false
-                //switchTag.setChecked(pref.getBoolean("switchState"+allEvents.get(j).getEventID(),false));
                 normalEventsHolder.addView(switchTag);
-                //timeEventsHolder.addView(switchTag);
+
 
             }
             //if the eventype is 0, this equals to question event = create button
-            if (allEvents.get(j).getEventType()==0){
+            if (allEvents.get(j).getEventType() == 0) {
                 Button btnTag = new Button(this);
-               // btnTag.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+                // btnTag.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
                 LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                params.setMargins(margin, 10, 0, 0);
-
+                params.setMargins(margin, 40, 0, 0);
                 btnTag.setTextColor(Color.WHITE);
                 btnTag.setLayoutParams(params);
                 btnTag.setText("" + allEvents.get(j).getEventName());
                 btnTag.setBackground(null);
-                btnTag.setCompoundDrawablesWithIntrinsicBounds(null, drawableTop , null, null);
+                btnTag.setCompoundDrawablesWithIntrinsicBounds(null, drawableTop, null, null);
 
 
                 btnTag.setTag(allEvents.get(j).getEventType() + "," + allEvents.get(j).getEventID());
                 btnTag.setOnClickListener(normalEventHandler);
-                margin=50;
                 normalEventsHolder.addView(btnTag);
 
 
             }
+
+            margin = 50;
         }
     }
 
     //Methode for parsin Json Array with Questions
-    public void parseJsonQuestions(){
+    public void parseJsonQuestions() {
 
         JSONArray jsonArrayQuestions;
 
         try {
             jsonArrayQuestions = new JSONArray(jsonQuestionStringData);
-            for (int i=0; i<jsonArrayQuestions.length(); i++){
+            for (int i = 0; i < jsonArrayQuestions.length(); i++) {
 
 
                 JSONObject jsonProductObject = jsonArrayQuestions.getJSONObject(i);
@@ -319,10 +441,10 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
                 int type = jsonProductObject.getInt("type");
                 String question = jsonProductObject.getString("question");
                 String possibleAnswer = jsonProductObject.getString("possibleAnswer");
-               allquestions.add(new JsonHolder(questionID,visible,operation,qcondition,questionGrp,type,question,possibleAnswer));
+                allquestions.add(new JsonHolder(questionID, visible, operation, qcondition, questionGrp, type, question, possibleAnswer));
             }
 
-            Log.d("ArrayQuestions",""+jsonArrayQuestions);
+            Log.d("ArrayQuestions", "" + jsonArrayQuestions);
 
 
         } catch (JSONException e) {
@@ -332,23 +454,24 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
         PersonInfo.setAllquestions(allquestions);
 
     }
+
     //Methode for parsin Json Array with events
-    public void parseJsonEvents(){
+    public void parseJsonEvents() {
 
         JSONArray jsonArrayEvents;
         try {
             jsonArrayEvents = new JSONArray(jsonEventsStringData);
-        for (int i=0; i<jsonArrayEvents.length(); i++){
+            for (int i = 0; i < jsonArrayEvents.length(); i++) {
 
-            JSONObject jsonProductObject = jsonArrayEvents.getJSONObject(i);
-            String eventID = jsonProductObject.getString("eventID");
-            int eventType = jsonProductObject.getInt("eventType");
-            String eventName = jsonProductObject.getString("eventName");
-            allEvents.add(new EventHolder(eventID,eventType,eventName));
+                JSONObject jsonProductObject = jsonArrayEvents.getJSONObject(i);
+                String eventID = jsonProductObject.getString("eventID");
+                int eventType = jsonProductObject.getInt("eventType");
+                String eventName = jsonProductObject.getString("eventName");
+                allEvents.add(new EventHolder(eventID, eventType, eventName));
 
-        }
+            }
 
-            Log.d("ArrayEvents",""+jsonArrayEvents);
+            Log.d("ArrayEvents", "" + jsonArrayEvents);
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -357,6 +480,38 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
         PersonInfo.setAllevents(allEvents);
 
     }
+
+
+    View.OnClickListener showCaseHandler = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+
+            switch (counter) {
+                case 0:
+                    showcaseView.setShowcase(new ViewTarget(relativScroll), true);
+                    showcaseView.setContentTitle("Dette er dine hændelser");
+                    showcaseView.setContentText("Her kan du aktivere hændelser der opstår i løbet af din dag. Nogle af disse hændelser skal deaktiveres igen når hændelsen er slut");
+
+                    break;
+
+                case 1:
+                    showcaseView.setShowcase(new ViewTarget(timeEventsHolder), true);
+                    showcaseView.setContentTitle("Dette er dine aktive hændelser");
+                    showcaseView.setContentText("Her kan du se hvilke hændelse der er aktive lige nu");
+                    showcaseView.setButtonText("Afslut");
+
+                    break;
+
+                case 2:
+                    showcaseView.hide();
+
+                    break;
+            }
+            counter++;
+
+        }
+    };
+
 
     View.OnClickListener normalEventHandler = new View.OnClickListener() {
 
@@ -376,7 +531,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
         }
     };
 
-        View.OnClickListener switchEventHandler = new View.OnClickListener() {
+    View.OnClickListener switchEventHandler = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
 
@@ -384,94 +539,217 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
             //ALT I SP SKAL SLETTES VED NY BRUGER
 
             Button universalSwitch = (Button) v;
-
             String[] eventInfo = universalSwitch.getTag().toString().split(",");
             String eventType = eventInfo[0];
             String eventID = eventInfo[1];
             String eventName = eventInfo[2];
 
+            //true: btn = active .... false: btn = not active. Default false
+            boolean btnState = pref.getBoolean("state" + eventID, false);
+
+            if (btnState == false) {
+
+                Log.d("Knappen er ", "falsk");
+                //set new background
+                universalSwitch.setCompoundDrawablesWithIntrinsicBounds(null, drawableToptrue, null, null);
+                //Sets which questions belongs to this event (questionGrp)
+                PersonInfo.setQuestionGrp(Integer.parseInt(eventID));
+                //TRIGGER ID IS WHAT KIND OF EVENT THIS IS WHEN IN UPLOADANSWERS ACTIVITY.
+                //IF TIME EVENT WE DONT WANT TO UPLOAD ANSWERS BEFORE TIME SWITCH IS OFF, THEREFOR DIFFERENT HANDLING IS REQUIRED
+                PersonInfo.setTrigger(Integer.parseInt(eventType));
+                //find time
+
+                String time = sdf.format(new Date().getTime());
 
 
-            ToggleButton test = new ToggleButton(MainUserActivity.this);
-            test.setText(eventName);
+                //Saving the state of the button, for when returning to the activity
+                editor.putBoolean("state" + eventID, true);
+                editor.putLong("starttime" + eventID, +System.currentTimeMillis());
+                editor.putString("eventtime" + eventID, time);
+                editor.commit();
+                activateIntepreter();
+                setLayout();
 
-            test.setTextOn("aktiv");
-            test.setBackgroundResource(R.drawable.buttoncirc);
-            test.setTextOff("afsluttet");
-            test.setChecked(true);
-            timeEventsHolder.addView(test);
+            }
 
-//            if (universalSwitch.isChecked()){
-//
-//                //Sets which questions belongs to this event (questionGrp)
-//                PersonInfo.setQuestionGrp(Integer.parseInt(eventID));
-//                //TRIGGER ID IS WHAT KIND OF EVENT THIS IS WHEN IN UPLOADANSWERS ACTIVITY.
-//                //IF TIME EVENT WE DONT WANT TO UPLOAD ANSWERS BEFORE TIME SWITCH IS OFF, THEREFOR DIFFERENT HANDLING IS REQUIRED
-//                PersonInfo.setTrigger(Integer.parseInt(eventType));
-//                //Set the eventID
-//                long startTime = System.currentTimeMillis();
-//                //Saving the state of the switch, for when returning to the activity
-//                editor.putBoolean("switchState" + eventID, true);
-//                //saving the timestart value
-//                editor.putLong("starttime"+eventID,+System.currentTimeMillis());
-//                editor.commit();
-//                Log.d("Trigger is now ", "" + PersonInfo.getTrigger());
-//                activateIntepreter();
-//            }
-//
-//            if (!universalSwitch.isChecked()){
-//                //Saving the state of the switch, for when returning to the activity
-//                editor.putBoolean("switchState" + eventID, false);
-//                //saving the timeend value
-//                editor.putLong("endtime" + eventID, +System.currentTimeMillis());
-//                editor.commit();
-//                String svar = pref.getString("answers"+PersonInfo.getQuestionGrp(),null);
-//                Log.d("Svare fra tidligere var",""+svar);
-//
-//                eventEnded(eventID);
-//
-//            }
+            if (btnState) {
+                Log.d("Knappen er nu ", "aktiv");
+                universalSwitch.setCompoundDrawablesWithIntrinsicBounds(null, drawableTop, null, null);
+//                editor.putBoolean("state" + eventID, false);
+                editor.putLong("endtime" + eventID, +System.currentTimeMillis());
+                editor.commit();
+//                setLayout();
+                eventEnded(eventID,eventName);
+
+
+            }
         }
     };
 
-    public void eventEnded(String eventID){
+    public void eventEnded(final String eventID, String ename) {
 
-       long endTime =  pref.getLong("endtime"+eventID,0);
-       long startTime = pref.getLong("starttime"+eventID,0);
-        long result = endTime - startTime;
-        String hms = String.format("%02d:%02d:%02d",
+
+
+        final long endTime = pref.getLong("endtime" + eventID, 0);
+        Log.d("endtime"," "+endTime);
+        final long startTime = pref.getLong("starttime" + eventID, 0);
+        Log.d("starttime"," "+startTime);
+        long result = (endTime - startTime);
+        final String hms = String.format("%02d timer, %02d minutter, og %02d sekunder",
                 TimeUnit.MILLISECONDS.toHours(result),
                 TimeUnit.MILLISECONDS.toMinutes(result) -
                         TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(result)), // The change is in this line
                 TimeUnit.MILLISECONDS.toSeconds(result) -
                         TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(result)));
 
-        Log.d("Tiden er ",eventID+" SLOG TIDEN FRA TIL "+hms);
-        int session = pref.getInt("session"+eventID,-1);
+
+        final int session = pref.getInt("session" + eventID, -1);
+
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Er hændelsen slut?")
+                .setMessage("Hændelsen, "+ename+", har varet i alt:\n" + hms + "\nBekræft, ændr afslutningstiden eller annuller")
+                .setCancelable(false)
+
+                //YES BUTTON
+                .setPositiveButton("Bekræft", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+
+                        editor.putBoolean("state" + eventID, false);
+                        editor.commit();
+                        setLayout();
+                        uploadTimeevent(eventID, session);
+
+
+                    }
+                })
+                // NO BUTTON
+                .setNegativeButton("Annuler", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        editor.putBoolean("state" + eventID, true);
+                        editor.commit();
+                        setLayout();
+
+                    }
+                })
+                //CHANGE TIME BUTTON
+                .setNeutralButton("Ændr tid", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        listener.gather(eventID,session);
+
+                        new SlideDateTimePicker.Builder(getSupportFragmentManager())
+                                .setListener(listener)
+                                .setInitialDate(new Date())
+                                .setIs24HourTime(true)
+                                .build()
+                                .show();
+
+                    }
+                });
+
+        builder.create().show();
+
+
+
+    }
+
+
+
+
+        private SlideDateTimeListener listener = new SlideDateTimeListener() {
+
+            String eid;
+            int session;
+
+        @Override
+        public void gather(String eid,int session){
+            this.eid = eid;
+            this.session = session;
+        }
+
+        @Override
+        public void onDateTimeSet(Date date)
+        {
+            long tiden = date.getTime();
+            editor.putLong("endtime" + eid, +tiden);
+            editor.putBoolean("state" + eid, false);
+            editor.commit();
+            setLayout();
+            uploadTimeevent(eid,session);
+
+        }
+
+        @Override
+        public void onDateTimeCancel()
+        {
+            Log.d("Du har cancleret ","yup og event id var "+eid);
+        }
+    };
+
+
+
+
+
+    public void uploadTimeevent(String eventID, int session){
+
+        final long endTime = pref.getLong("endtime" + eventID, 0);
+        Log.d("endtime"," "+endTime);
+        final long startTime = pref.getLong("starttime" + eventID, 0);
+        Log.d("starttime"," "+startTime);
+        long result = (endTime - startTime);
+        final String hms = String.format("%02d:%02d:%02d",
+                TimeUnit.MILLISECONDS.toHours(result),
+                TimeUnit.MILLISECONDS.toMinutes(result) -
+                        TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(result)), // The change is in this line
+                TimeUnit.MILLISECONDS.toSeconds(result) -
+                        TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(result)));
+
+        Toast.makeText(this, "Hændelsen er nu slut og varede i alt " + hms + " Svaret uploades automatisk", Toast.LENGTH_SHORT).show();
+
+        Log.d("Tiden er nu ", "" + hms + " og session er " +session);
+
         db.updateDuration(hms, session);
 
 
     }
+
+
+
+
 
     @Override
     public void onClick(View v) {
 
         if (v==launchInterpreterBtn){
 
-            //The diary always have questionGrp = 0;
-            PersonInfo.setTrigger(0);
-            PersonInfo.setQuestionGrp(0);
-            activateIntepreter();
+            boolean state = pref.getBoolean("state",false);
+            if (state == false) {
+                //The diary always have questionGrp = 0;
+                PersonInfo.setTrigger(0);
+                PersonInfo.setQuestionGrp(0);
+                activateIntepreter();
+
+            }
+            else {
+                  Toast.makeText(this, "Du har allerede svaret for i dag ", Toast.LENGTH_SHORT).show();
+            }
 
         }
+
     }
 
 
 
     public void activateIntepreter(){
 
-        Intent launchInterpreter = new Intent(MainUserActivity.this,InterpreterActivity.class);
+        Intent launchInterpreter = new Intent(this,InterpreterActivity.class);
+        //launchInterpreter.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         startActivity(launchInterpreter);
+
 
     }
 
@@ -528,7 +806,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
         try {
 
             // Enter URL address where your php file resides
-            url = new URL("http://10.0.2.2/questions.php");
+            url = new URL("http://hadsundmotion.dk/questions.php");
 
         } catch (MalformedURLException e) {
             // TODO Auto-generated catch block
@@ -623,7 +901,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
         try {
 
             // Enter URL address where your php file resides
-            url = new URL("http://10.0.2.2/events.php");
+            url = new URL("http://hadsundmotion.dk/events.php");
 
         } catch (MalformedURLException e) {
             // TODO Auto-generated catch block
@@ -722,16 +1000,15 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
     protected void exitByBackKey() {
 
         AlertDialog alertbox = new AlertDialog.Builder(this)
-                .setMessage("Vil du logge af?")
+                .setMessage("Vil du afslutte?")
                 .setPositiveButton("Ja", new DialogInterface.OnClickListener() {
 
                     // do something when the button is clicked
                     public void onClick(DialogInterface arg0, int arg1) {
 
                         Intent intent = new Intent(Intent.ACTION_MAIN);
-                        intent.addCategory(Intent.CATEGORY_HOME);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent);
+                        finish();
                         //close();
 
 
@@ -747,6 +1024,35 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
     }
 
+//
+//    protected boolean startTimeEvent(String eventname){
+//
+//        final boolean[] yesno = {false};
+//
+//        AlertDialog alertbox = new AlertDialog.Builder(this)
+//                .setMessage("Bekræft start at tidshændelse "+eventname+" Husk at afslutte når du er færdig")
+//                .setPositiveButton("Ja", new DialogInterface.OnClickListener() {
+//
+//                    // do something when the button is clicked
+//                    public void onClick(DialogInterface arg0, int arg1) {
+//
+//                       yesno[0] = true;
+//                        //close();
+//
+//
+//                    }
+//                })
+//                .setNegativeButton("Fortryd start", new DialogInterface.OnClickListener() {
+//
+//                    // do something when the button is clicked
+//                    public void onClick(DialogInterface arg0, int arg1) {
+//                    }
+//                })
+//                .show();
+//        return yesno[0];
+//
+//    }
 
 
-}
+
+    }

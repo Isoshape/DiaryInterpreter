@@ -4,4 +4,5 @@
     <color name="colorPrimaryDark">#003366</color>
     <color name="colorAccent">#75787B</color>
     <color name="colorPrimaryDarkalpha">#CC003366</color>
+    <color name="custom_showcase_bg">#b9000102</color>
 </resources>

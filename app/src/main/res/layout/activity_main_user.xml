@@ -18,7 +18,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/mainholder"
-    android:background="@drawable/mountainnew"
+    android:background="@drawable/mountainv2"
     android:orientation="vertical"
     >
 
@@ -44,7 +44,7 @@
             android:layout_marginRight="5dp"
             android:textStyle="bold"
             android:background="@drawable/bluecircle"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="20dp"
             android:layout_marginBottom="3dp"
             android:id="@+id/InterpreterBtn"
             android:elegantTextHeight="true"
@@ -56,7 +56,7 @@
             android:id="@+id/timeleftTextview"
             android:textStyle="italic"
             android:layout_gravity="center"
-            android:textColor="#ffffff"
+            android:textColor="@color/colorPrimaryDark"
             android:layout_marginBottom="10dp"
             android:text="Tidsfrist:" />
 
@@ -72,29 +72,42 @@
         android:layout_weight="5"
         android:orientation="vertical"
        >
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:textStyle="bold"
-            android:textColor="#ffffff"
-            android:text="Jeg oplever..."
-            android:gravity="center_horizontal"/>
+
 
         <RelativeLayout
+            android:id="@+id/relativScroll"
+            android:layout_weight="2"
+
+            android:gravity="center"
+            android:layout_gravity="center"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:id="@+id/eventsTxtview"
+                android:textStyle="bold"
+                android:textColor="#ffffff"
+                android:layout_above="@+id/horizontalScrollview"
+                android:text="Mine hændelser:"
+                android:layout_centerHorizontal="true"/>
 
 
         <ImageView android:id="@+id/previous" android:src="@drawable/arrowleft"
             android:layout_height="14dp" android:layout_width="10dp"
             android:layout_alignParentLeft="true"
-            android:layout_centerVertical="true" />
+            android:layout_centerVertical="true"
+            />
 
         <ImageView android:id="@+id/next" android:src="@drawable/arrowright"
             android:layout_height="14dp" android:layout_width="10dp"
+            android:layout_centerVertical="true"
             android:layout_alignParentRight="true"
-            android:layout_centerVertical="true" />
+             />
+
+            <!--android:layout_centerVertical="true"-->
 
         <HorizontalScrollView
             android:layout_width="match_parent"
@@ -102,6 +115,9 @@
             android:layout_toLeftOf="@id/next"
             android:layout_toRightOf="@id/previous"
             android:scrollbars="none"
+            android:layout_centerVertical="true"
+            android:paddingRight="5dp"
+            android:paddingLeft="5dp"
             android:fadingEdgeLength="30dp"
             android:fadingEdge="horizontal"
             android:layout_height="wrap_content"
@@ -111,8 +127,6 @@
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-
-                android:gravity="center_vertical"
                 android:orientation="horizontal"
                 android:id="@+id/normalEvents">
 
@@ -123,22 +137,43 @@
         </RelativeLayout>
 
         <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginBottom="20dp"
+            android:orientation="vertical"
+            >
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:id="@+id/activeIncidentTxtView"
+            android:layout_height="wrap_content"
+            android:textColor="#ffffff"
+            android:textStyle="bold"
+            android:layout_gravity="center"
+            android:text="Aktive hændelser..."
+            android:gravity="center_horizontal"/>
+
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            >
+        <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="horizontal"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+            android:layout_gravity="center_horizontal"
             android:gravity="center_horizontal"
-        android:layout_weight="1"
         android:id="@+id/timeEvents">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Aktive hændelser"
-                android:gravity="center_horizontal"/>
-
 
         </LinearLayout>
 
+         </ScrollView>
+
+        </LinearLayout>
 
     </LinearLayout>
 

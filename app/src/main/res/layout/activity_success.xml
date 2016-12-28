@@ -41,7 +41,7 @@
         android:text="Velkommen"
         android:id="@+id/main_title_textView"
         android:textStyle="bold"
-        android:textSize="17sp"
+        android:textSize="27sp"
         android:layout_weight="1" />
 
     </LinearLayout>

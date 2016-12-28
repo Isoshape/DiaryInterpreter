@@ -11,12 +11,27 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:supportsRtl="true"
+
+        android:label="Diarium"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity"></activity>
-        <activity android:name=".InterpreterActivity" />
-        <activity android:name=".UploadAnswers" />
-        <activity android:name=".MainUserActivity" />
-        <activity android:name=".Splashscreen">
+        <activity android:name=".MainActivity">
+
+        </activity>
+        <activity android:name=".InterpreterActivity"
+            android:configChanges = "orientation"
+            android:screenOrientation = "portrait"/>
+        <activity android:name=".UploadAnswers"
+            android:configChanges = "orientation"
+
+            android:screenOrientation = "portrait"/>
+        <activity android:name=".MainUserActivity"
+            android:configChanges = "orientation"
+            android:screenOrientation = "portrait">
+          </activity>
+        <activity android:name=".Splashscreen"
+            android:configChanges = "orientation"
+
+            android:screenOrientation = "portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

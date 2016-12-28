@@ -1,18 +1,14 @@
 package com.example.bigmac.diaryinterpreter;
 
 
-
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-
-
 import android.support.v7.widget.Toolbar;
 import android.text.InputType;
 import android.util.Log;
@@ -122,7 +118,7 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
             session = db.getSession()+1;
             Log.d("Hva er session",""+session);
 
-            //checks if event is of type 1.
+            //checks if event is of type 1. if so put duration to zero, and save this session combined with eventID in SP
             if (PersonInfo.getTrigger() == 1){
                 duration = "0";
                 editor.putInt("session"+PersonInfo.getQuestionGrp(),+session);
@@ -188,8 +184,7 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
         if (item.getItemId() == android.R.id.home) {
 
             exitByBackKey();
-//            Intent intent = new Intent(InterpreterActivity.this,MainUserActivity.class);
-//            startActivity(intent);
+
         }
 
 
@@ -239,7 +234,7 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
 
                }
                 else {
-                     Toast.makeText(InterpreterActivity.this, "Du er ved første spørgsmål ", Toast.LENGTH_LONG).show();
+                     Toast.makeText(InterpreterActivity.this, "Du er ved første spørgsmål ", Toast.LENGTH_SHORT).show();
                }
 
             }
@@ -310,9 +305,23 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
         }
         //this makes sure that the last data is saved, and no more layouts are being called - only next activity.
         else if (i == result.size()){
-            Log.d("Arrayslut",""+i);
+            String svar = "Tak for dine svar. De vil automatisk blive uploadet";
+            boolean state = true;
+
+            if(PersonInfo.getQuestionGrp() == 0) {
+                editor.putString("date", currentDate);
+                editor.putBoolean("state", state);
+                editor.commit();
+            }
+
+            if (PersonInfo.getTrigger()==1){
+                svar = "Husk at deaktivere hændelsen når den er færdig";
+            }
+
+            Toast.makeText(InterpreterActivity.this, svar, Toast.LENGTH_SHORT).show();
+            Log.d("Arrayslut", "" + i);
             Intent intent = new Intent(InterpreterActivity.this,MainUserActivity.class);
-            intent.putExtra("questionArray", result);
+            intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
             startActivity(intent);
         }
         }
@@ -357,7 +366,7 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
         }
         else {
             typeHandler();
-            Toast.makeText(InterpreterActivity.this, "Vælg venligst et svar ", Toast.LENGTH_LONG).show();
+            Toast.makeText(InterpreterActivity.this, "Vælg venligst et svar ", Toast.LENGTH_SHORT).show();
 
         }
     }
@@ -430,7 +439,7 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
         //Check if editText is empty
         if (etAnswer.getText().toString().matches("")){
             typeHandler();
-            Toast.makeText(InterpreterActivity.this, "Indtast venligst et svar ", Toast.LENGTH_LONG).show();
+            Toast.makeText(InterpreterActivity.this, "Indtast venligst et svar ", Toast.LENGTH_SHORT).show();
 
         }
         else {
@@ -480,12 +489,14 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
                     public void onClick(DialogInterface arg0, int arg1) {
 
                         if (PersonInfo.getTrigger()==1){
-                            editor.putBoolean("switchState" + PersonInfo.getQuestionGrp(), false);
+                            editor.putBoolean("state" + PersonInfo.getQuestionGrp(), false);
                             editor.commit();
                         }
                         db.deleteBackBtn(session);
                         Intent goback = new Intent(InterpreterActivity.this,MainUserActivity.class);
+                        goback.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                         startActivity(goback);
+                        finish();
                         //close();
 
 
