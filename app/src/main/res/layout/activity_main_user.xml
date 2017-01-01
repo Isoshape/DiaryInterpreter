@@ -73,6 +73,24 @@
         android:orientation="vertical"
        >
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_weight="1"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:id="@+id/normalEvents">
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/openEventsBtn"
+                android:text="Åben dine mulige hændelser"
+                />
+
+        </LinearLayout>
+
 
         <RelativeLayout
             android:id="@+id/relativScroll"
@@ -91,8 +109,10 @@
                 android:textStyle="bold"
                 android:textColor="#ffffff"
                 android:layout_above="@+id/horizontalScrollview"
-                android:text="Mine hændelser:"
+                android:text="Aktive hændelser:"
                 android:layout_centerHorizontal="true"/>
+
+
 
 
         <ImageView android:id="@+id/previous" android:src="@drawable/arrowleft"
@@ -128,7 +148,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:id="@+id/normalEvents">
+                android:id="@+id/timeEvents">
 
             </LinearLayout>
 
@@ -136,44 +156,6 @@
 
         </RelativeLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginBottom="20dp"
-            android:orientation="vertical"
-            >
-
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:id="@+id/activeIncidentTxtView"
-            android:layout_height="wrap_content"
-            android:textColor="#ffffff"
-            android:textStyle="bold"
-            android:layout_gravity="center"
-            android:text="Aktive hændelser..."
-            android:gravity="center_horizontal"/>
-
-
-        <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            >
-        <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-            android:layout_gravity="center_horizontal"
-            android:gravity="center_horizontal"
-        android:id="@+id/timeEvents">
-
-        </LinearLayout>
-
-         </ScrollView>
-
-        </LinearLayout>
 
     </LinearLayout>
 
