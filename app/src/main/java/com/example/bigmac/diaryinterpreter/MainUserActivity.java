@@ -28,6 +28,9 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.LinearInterpolator;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -146,8 +149,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
         //sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
 
 
-        drawableTop = ResourcesCompat.getDrawable(getResources(), R.drawable.buttonfalse, null);
-        drawableToptrue = ResourcesCompat.getDrawable(getResources(), R.drawable.buttonactive, null);
+        drawableTop = ResourcesCompat.getDrawable(getResources(), R.drawable.eventperson, null);
 
         //pref with private mode = 0 (the created file can only be accessed by the calling application)
         pref = getApplicationContext().getSharedPreferences("MyPref", 0);
@@ -295,7 +297,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
             answerstate = false;
         }
         ///////
-      //  countDown();
+       countDown();
 
 
     }
@@ -382,7 +384,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
                 Button switchBtn = new Button(this);
                 LinearLayout.LayoutParams btnparam = new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                btnparam.setMargins(margin, 40, 0, 0);
+                btnparam.setMargins(margin, 60, 0, 0);
                 switchBtn.setLayoutParams(btnparam);
                 switchBtn.setCompoundDrawablesWithIntrinsicBounds(null, drawableTop, null, null);
                 String time = pref.getString("eventtime" + allEvents.get(j).getEventID(), "00:00:00");
@@ -391,6 +393,14 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                     switchBtn.setBackground(null);
                 }
+                Animation mAnimation = new AlphaAnimation(1, 0);
+                mAnimation.setDuration(500);
+                mAnimation.setInterpolator(new LinearInterpolator());
+                mAnimation.setRepeatCount(Animation.INFINITE);
+                mAnimation.setRepeatMode(Animation.REVERSE);
+                switchBtn.startAnimation(mAnimation);
+
+
                 switchBtn.setTextColor(Color.WHITE);
                 switchBtn.setOnClickListener(switchEventHandler);
                 timeEventsHolder.addView(switchBtn);
@@ -523,6 +533,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
             String eventType = eventInfo[0];
             String eventID = eventInfo[1];
             String eventName = eventInfo[2];
+            universalSwitch.clearAnimation();
 
             //true: btn = active .... false: btn = not active. Default false
             //boolean btnState = pref.getBoolean("state" + eventID, false);
