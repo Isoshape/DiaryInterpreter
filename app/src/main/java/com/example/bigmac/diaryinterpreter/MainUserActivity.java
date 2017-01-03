@@ -2,17 +2,15 @@ package com.example.bigmac.diaryinterpreter;
 
 
 import android.app.AlertDialog;
-import android.app.Dialog;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.ProgressDialog;
-import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -23,13 +21,13 @@ import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.view.animation.LinearInterpolator;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -39,7 +37,6 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.github.amlcurran.showcaseview.ShowcaseView;
@@ -61,7 +58,6 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -125,8 +121,6 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
     //drawables
     Drawable drawableTop;
-    Drawable drawableToptrue;
-
 
     //date variables
     String date;
@@ -137,7 +131,8 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
     long msInDay = 86400000;
 
 
-
+    AlertDialog.Builder alertDialog = null;
+    Animation myAnim;
 
 
     @Override
@@ -146,9 +141,11 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
         setContentView(R.layout.activity_main_user);
 
         sdf = new SimpleDateFormat("HH:mm:ss");
-        //sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
+        myAnim =  AnimationUtils.loadAnimation(this, R.anim.btnflash);
+        MyBounceInterpolator interpolator = new MyBounceInterpolator(0.2, 20);
+        myAnim.setInterpolator(interpolator);
 
-
+        alertDialog = new AlertDialog.Builder(MainUserActivity.this);
         drawableTop = ResourcesCompat.getDrawable(getResources(), R.drawable.eventperson, null);
 
         //pref with private mode = 0 (the created file can only be accessed by the calling application)
@@ -204,8 +201,6 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
         }
 
-        Log.d("onCreate", " er kaldet!!");
-
     }
 
 
@@ -220,7 +215,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
         c.set(Calendar.MINUTE, 0);
         c.set(Calendar.SECOND, 0);
         c.set(Calendar.MILLISECOND, 0);
-        long howMany = msInDay - (System.currentTimeMillis() - c.getTimeInMillis());
+        final long howMany = msInDay - (System.currentTimeMillis() - c.getTimeInMillis());
 
         new CountDownTimer(howMany, 1000) {
 
@@ -234,12 +229,20 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
                     String time = timezone.format(millisUntilFinished);
                     timeleftTextview.setText("Tidsfrist: " + time);
+
+                    if ((msInDay/2)> howMany){
+
+                   
+
+
+                    }
+
                     //here you can have your logic to set text to edittext
                 }
             }
 
             public void onFinish() {
-                //next patch - when timer finished check state. If state is still false notice that that day wasent answered!
+                //next patch - when timer finished check state. If state is still false notice that that day was not answered!
                 editor.putBoolean("state", false);
                 editor.commit();
                 answerstate = false;
@@ -252,6 +255,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
 
     }
+
 
 
     //when activity is active this methodes get called
@@ -283,7 +287,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
         state = pref.getBoolean("state", false);
         currentDate = dayformat.format(new Date());
 
-        Log.d("date og state er: ","state: "+state + " date: "+date + " currentdate er: "+currentDate);
+        Log.d("date og state er: ", "state: " + state + " date: " + date + " currentdate er: " + currentDate);
 
         if (date.equalsIgnoreCase(currentDate) && state == true) {
             Log.d("Kommer vi herind?","test");
@@ -393,12 +397,13 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                     switchBtn.setBackground(null);
                 }
-                Animation mAnimation = new AlphaAnimation(1, 0);
-                mAnimation.setDuration(500);
-                mAnimation.setInterpolator(new LinearInterpolator());
-                mAnimation.setRepeatCount(Animation.INFINITE);
-                mAnimation.setRepeatMode(Animation.REVERSE);
-                switchBtn.startAnimation(mAnimation);
+//                Animation mAnimation = new AlphaAnimation(1, 0);
+//                mAnimation.setDuration(100);
+//                mAnimation.setInterpolator(new LinearInterpolator());
+//                mAnimation.setRepeatCount(Animation.INFINITE);
+//                mAnimation.setRepeatMode(Animation.REVERSE);
+
+                switchBtn.startAnimation(myAnim);
 
 
                 switchBtn.setTextColor(Color.WHITE);
@@ -655,8 +660,6 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
 
 
-
-
     public void uploadTimeevent(String eventID, int session){
 
         final long endTime = pref.getLong("endtime" + eventID, 0);
@@ -671,8 +674,8 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
                 TimeUnit.MILLISECONDS.toSeconds(result) -
                         TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(result)));
 
-        Toast.makeText(this, "Hændelsen er nu slut og varede i alt \n" + hms + "\nSvaret uploades automatisk - tak", Toast.LENGTH_SHORT).show();
-
+        Toast.makeText(this, "Hændelsen er nu slut og varede i alt \n" + hms + "\nSvaret uploades automatisk - tak", Toast.LENGTH_LONG).show();
+        
         db.updateDuration(hms, session);
 
     }
@@ -1002,7 +1005,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
             eventType.add(allEvents.get(b).getEventType());
         }
 
-        final AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainUserActivity.this);
+
         LayoutInflater inflater = getLayoutInflater();
         View convertView = (View) inflater.inflate(R.layout.customlist, null);
         alertDialog.setView(convertView);

@@ -401,7 +401,7 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
 
 
 
-                newRadioButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 10F, this.getResources().getDisplayMetrics()));
+                newRadioButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 7F, this.getResources().getDisplayMetrics()));
                // newRadioButton.setPadding(0, 110, 0, 110);
                 newRadioButton.setGravity(Gravity.CENTER);
                 newRadioButton.setText("" + questionssplit[a]);
@@ -463,6 +463,7 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
         final LinearLayout.LayoutParams lparams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,200);
         etAnswer = new EditText(this);
         etAnswer.setLayoutParams(lparams);
+        etAnswer.setHint("Klik for at indtaste dit svar");
         etAnswer.setInputType(InputType.TYPE_CLASS_TEXT);
         etAnswer.setImeOptions(EditorInfo.IME_ACTION_DONE);
         etAnswer.setBackgroundResource(R.drawable.roundedbutton);
