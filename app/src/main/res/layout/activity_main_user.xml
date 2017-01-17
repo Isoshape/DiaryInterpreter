@@ -147,7 +147,7 @@
             android:fadingEdgeLength="30dp"
             android:fadingEdge="horizontal"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="7dp"
+
             >
 
             <LinearLayout

@@ -1,6 +1,7 @@
 package com.example.bigmac.diaryinterpreter;
 
 
+import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -9,6 +10,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
@@ -17,6 +19,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -135,10 +138,25 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
     Animation myAnim;
 
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_user);
+
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, 18);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        Intent intent1 = new Intent(MainUserActivity.this, NotificationReciever.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(MainUserActivity.this, 0,intent1, PendingIntent.FLAG_UPDATE_CURRENT);
+        AlarmManager am = (AlarmManager) MainUserActivity.this.getSystemService(MainUserActivity.this.ALARM_SERVICE);
+        am.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
+
+
+
 
         sdf = new SimpleDateFormat("HH:mm:ss");
         myAnim =  AnimationUtils.loadAnimation(this, R.anim.btnflash);
@@ -232,7 +250,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
                     if ((msInDay/2)> howMany){
 
-                   
+
 
 
                     }
@@ -292,7 +310,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
         if (date.equalsIgnoreCase(currentDate) && state == true) {
             Log.d("Kommer vi herind?","test");
             answerstate = true;
-            launchInterpreterBtn.setBackgroundResource(R.drawable.circle);
+            launchInterpreterBtn.setBackgroundResource(R.drawable.circlered);
             timeleftTextview.setText("Tak for dit svar. På gensyn i morgen");
 
         } else {
@@ -367,7 +385,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
     }
 
 
-    //Methode for creating diary buttons + events buttons/switchs
+    //Methode for creating event buttons
     public void setLayout() {
 
 
@@ -397,11 +415,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                     switchBtn.setBackground(null);
                 }
-//                Animation mAnimation = new AlphaAnimation(1, 0);
-//                mAnimation.setDuration(100);
-//                mAnimation.setInterpolator(new LinearInterpolator());
-//                mAnimation.setRepeatCount(Animation.INFINITE);
-//                mAnimation.setRepeatMode(Animation.REVERSE);
+
 
                 switchBtn.startAnimation(myAnim);
 
@@ -546,11 +560,10 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
                 Log.d("Knappen er nu ", "evenID "+eventID+" eventName " +eventName);
                 universalSwitch.setCompoundDrawablesWithIntrinsicBounds(null, drawableTop, null, null);
 
-                editor.putLong("endtime" + eventID, +System.currentTimeMillis());
-                editor.commit();
+            editor.putLong("endtime" + eventID, +System.currentTimeMillis());
+            editor.commit();
 
-                eventEnded(eventID,eventName);
-
+            eventEnded(eventID, eventName);
 
 
         }
@@ -560,7 +573,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
 
         final long endTime = pref.getLong("endtime" + eventID, 0);
-        Log.d("endtime"," "+endTime);
+        Log.d("endtime", " " + endTime);
         final long startTime = pref.getLong("starttime" + eventID, 0);
         Log.d("starttime"," "+startTime);
         long result = (endTime - startTime);
@@ -580,7 +593,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
                 .setMessage("Tid:\n" + hms + "\nBekræft, ændr afslutningstiden eller annuller")
                 .setCancelable(false)
 
-                //YES BUTTON
+                        //YES BUTTON
                 .setPositiveButton("Bekræft", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
 
@@ -592,7 +605,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
                     }
                 })
-                // NO BUTTON
+                        // NO BUTTON
                 .setNegativeButton("Annuler", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -603,7 +616,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
                     }
                 })
-                //CHANGE TIME BUTTON
+                        //CHANGE TIME BUTTON
                 .setNeutralButton("Ændr tid", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -675,7 +688,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
                         TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(result)));
 
         Toast.makeText(this, "Hændelsen er nu slut og varede i alt \n" + hms + "\nSvaret uploades automatisk - tak", Toast.LENGTH_LONG).show();
-        
+
         db.updateDuration(hms, session);
 
     }
@@ -1020,7 +1033,7 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
             public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
 
                 //Object o = lv.getItemAtPosition(position);
-                boolean local = pref.getBoolean("state"+eventID.get(position),false);
+                boolean local = pref.getBoolean("state"+eventID.get(position), false);
                 if (local){
                     Toast.makeText(MainUserActivity.this, "Denne hændelse er allerede aktiv", Toast.LENGTH_SHORT).show();
 
@@ -1063,7 +1076,6 @@ public class MainUserActivity extends AppCompatActivity implements View.OnClickL
 
 
     }
-
 
 
 

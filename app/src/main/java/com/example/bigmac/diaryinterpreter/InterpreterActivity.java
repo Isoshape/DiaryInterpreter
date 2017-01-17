@@ -246,10 +246,11 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
 
     public void typeHandler(){
 
+        //NOTES TO MY SELF:
         //TYPEHANDLER() is responsible for activating the correct layout
-        //MÅ IKKE KALDES HVIS I ER STØRRE END INDEX,
+        //MAY NOT BE CALLED IF I IS GREATER THAN INDEX
         if (i < result.size()) {
-            Log.d("1. i= ", "" + i);
+
             answersHold.removeAllViews();
 
             if (activator.equalsIgnoreCase("next")) {
@@ -260,13 +261,14 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
                     Log.d("master er ", "" + master);
                     //compare this question condition with the master if true show this question
                     if (db.getAnswer(master,session) == result.get(i).getQcondition()) {
-                        Log.d("forrige svar var ", "" + db.getAnswer(master,session));
-                        Log.d("Spørgsmålet skal vises", "hurra");
+
                         layoutActivator();
                     }
 
                     //if condition is not true skip this question and iterate i.
                     else {
+                        db.addAnswer(new Answers(result.get(i).getQuestionID(),PersonInfo.getDiaryID(),PersonInfo.getUserID(),"-1",PersonInfo.getQuestionGrp(), currentDate,time,duration,session));
+                        db.close();
                         i++;
                         typeHandler();
                     }
@@ -285,13 +287,14 @@ public class InterpreterActivity extends AppCompatActivity implements View.OnCli
                     Log.d("master er ", "" + master);
                     //compare this question condition with the master if true show this question
                     if (db.getAnswer(master,session) == result.get(i).getQcondition()) {
-                        Log.d("forrige svar var ", "" + db.getAnswer(master,session));
-                        Log.d("Spørgsmålet skal vises", "hurra");
+
                         layoutActivator();
                     }
 
                     //if condition is not true skip this question and call methode again
                     else {
+                        //DELETE DEFAULT GENERATED ANSWER (GENERATED IF THIS IS NOT ANSWERED)
+                        db.deleteLast();
                         typeHandler();
                     }
                     //show the correct layout
